@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">WHS_After_Mate</string>
+    <string name="title_home">홈</string>
+    <string name="title_mycare">My Care</string>
+    <string name="title_aiguide">AI 가이드</string>
+    <string name="title_settings">설정</string>
+</resources>
