@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WHSAfterMate">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.splash.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.WHSAfterMate">
             <intent-filter>
@@ -19,6 +19,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.WHSAfterMate" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.WHSAfterMate" />
     </application>
 
 </manifest>

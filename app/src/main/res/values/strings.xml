@@ -4,4 +4,17 @@
     <string name="title_mycare">My Care</string>
     <string name="title_aiguide">AI 가이드</string>
     <string name="title_settings">설정</string>
+
+    <!-- Splash -->
+    <string name="logo_description">앱 로고</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">회복은 관리에서 시작됩니다</string>
+    <string name="onboarding_subtitle_1">시술 후의 시간도 케어의 일부예요.\nWHS After Mate가 그 여정을 함께합니다</string>
+    <string name="onboarding_title_2">오늘 필요한 관리를 알려드려요</string>
+    <string name="onboarding_subtitle_2">시술 종류와 경과일에 맞춰\n지금 필요한 사후관리 방법을 안내합니다</string>
+    <string name="onboarding_title_3">시술 이후에도 계속 연결됩니다</string>
+    <string name="onboarding_subtitle_3">관리 기록부터 궁금한 점과 다음 케어까지,\nWHS After Mate에서 한 번에 확인하세요</string>
+    <string name="onboarding_next">다음</string>
+    <string name="onboarding_start">시작하기</string>
 </resources>
