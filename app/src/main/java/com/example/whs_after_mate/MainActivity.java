@@ -30,23 +30,6 @@ public class MainActivity extends AppCompatActivity {
                 R.id.navigation_home, R.id.navigation_mycare, R.id.navigation_aiguide, R.id.navigation_settings)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
-        
-        // Hide bottom navigation for auth fragments
-        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
-            int id = destination.getId();
-            if (id == R.id.loginFragment || id == R.id.signUpFragment || id == R.id.resetPasswordFragment) {
-                binding.navView.setVisibility(android.view.View.GONE);
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().hide();
-                }
-            } else {
-                binding.navView.setVisibility(android.view.View.VISIBLE);
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().show();
-                }
-            }
-        });
-
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
     }
