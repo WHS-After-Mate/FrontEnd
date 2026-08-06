@@ -19,6 +19,11 @@
     <!-- 윔 -->
     <color name="wim">#7AD9B5</color>
 
+    <!-- Home screen neutrals -->
+    <color name="text_secondary">#8A8A8E</color>
+    <color name="divider">#ECECEC</color>
+    <color name="card_border">#EFEFEF</color>
+
     <!-- Bottom navigation -->
     <color name="nav_icon_inactive">#ADADB2</color>
 </resources>
