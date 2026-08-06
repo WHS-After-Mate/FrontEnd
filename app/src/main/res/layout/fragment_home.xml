@@ -184,7 +184,7 @@
             android:layout_marginTop="26dp"
             android:layout_marginBottom="10dp"
             android:text="@string/home_next_care_section"
-            android:textColor="@color/whs_black"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -248,7 +248,7 @@
             android:layout_marginTop="26dp"
             android:layout_marginBottom="10dp"
             android:text="@string/home_voucher_section"
-            android:textColor="@color/whs_black"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold" />
 

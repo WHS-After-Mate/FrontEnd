@@ -4,13 +4,19 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.whs_after_mate.R;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeViewModel extends ViewModel {
 
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("M월 d일", Locale.KOREA);
+
     private final String userName = "지수";
-    private final String dateLabel = "7월 31일 · 울쎄라 리프팅 5일차";
+    private final String dateLabel = LocalDate.now().format(DATE_FORMATTER) + " · 울쎄라 리프팅 5일차";
     private final String brandLabel = "엠레드 · 오늘의 사후관리";
     private final String careTitle = "울쎄라 리프팅 · 5일차 케어";
     private final String careSubtitle = "회복기 중반, 오늘 지켜야 할 점을 확인해보세요";
