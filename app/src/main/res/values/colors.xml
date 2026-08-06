@@ -7,4 +7,20 @@
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+
+    <!-- Brand palette: Black & White concept, true black is not used -->
+    <color name="whs_black">#0A0A0B</color>
+    <color name="background">#FAFAF8</color>
+
+    <!-- 더나 -->
+    <color name="derna">#FFF84A</color>
+    <!-- 엠레드 -->
+    <color name="amred">#A3A9FF</color>
+    <!-- 윔 -->
+    <color name="wim">#7AD9B5</color>
+
+    <!-- Home screen neutrals -->
+    <color name="text_secondary">#8A8A8E</color>
+    <color name="divider">#ECECEC</color>
+    <color name="card_border">#EFEFEF</color>
 </resources>

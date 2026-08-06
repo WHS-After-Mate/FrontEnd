@@ -4,4 +4,15 @@
     <string name="title_mycare">My Care</string>
     <string name="title_aiguide">AI 가이드</string>
     <string name="title_settings">설정</string>
+
+    <!-- Home -->
+    <string name="home_greeting">안녕하세요, %1$s님</string>
+    <string name="home_care_ai_guide_cta">AI 가이드 보기 →</string>
+    <string name="home_ask_ai_title">AI에게 바로 물어보기</string>
+    <string name="home_ask_ai_subtitle">궁금한 점을 챗봇에게 질문해보세요</string>
+    <string name="home_next_care_section">다음 관리 추천</string>
+    <string name="home_recommend_cta">추천 상세 보기</string>
+    <string name="home_voucher_section">이용권 현황</string>
+    <string name="home_voucher_remaining">잔여 %1$d회 ﹥</string>
+    <string name="home_voucher_view_all">전체 이용권 보기 ﹥</string>
 </resources>
