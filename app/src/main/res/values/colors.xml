@@ -26,4 +26,7 @@
 
     <!-- Bottom navigation -->
     <color name="nav_icon_inactive">#ADADB2</color>
+
+    <!-- Settings -->
+    <color name="switch_track_off">#E4E4E4</color>
 </resources>
