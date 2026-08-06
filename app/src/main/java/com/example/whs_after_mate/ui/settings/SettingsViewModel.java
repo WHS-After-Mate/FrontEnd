@@ -1,19 +1,17 @@
 package com.example.whs_after_mate.ui.settings;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class SettingsViewModel extends ViewModel {
 
-    private final MutableLiveData<String> mText;
+    private final String userName = "지수";
+    private final String email = "jisoo@example.com";
 
-    public SettingsViewModel() {
-        mText = new MutableLiveData<>();
-        mText.setValue("This is settings fragment");
+    public String getUserName() {
+        return userName;
     }
 
-    public LiveData<String> getText() {
-        return mText;
+    public String getEmail() {
+        return email;
     }
 }
