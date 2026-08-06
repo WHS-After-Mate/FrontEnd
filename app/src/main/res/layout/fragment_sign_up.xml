@@ -11,14 +11,14 @@
     <!-- 상단 뒤로가기 버튼 -->
     <ImageView
         android:id="@+id/btnBack"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:padding="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:src="@drawable/ic_back"
+        android:padding="4dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 타이틀 영역 -->
+    <!-- 타이틀 및 설명 -->
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
@@ -26,7 +26,7 @@
         android:layout_marginTop="24dp"
         android:text="회원가입"
         android:textColor="@color/whs_black"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnBack" />
@@ -35,7 +35,7 @@
         android:id="@+id/tvSubtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="몇 가지 정보만 알려주시면 시작할 수 있어요"
         android:textColor="@color/gray_text_label"
         android:textSize="14sp"
@@ -48,7 +48,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="32dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
         android:scrollbars="none"
         app:layout_constraintBottom_toTopOf="@id/btnSignUp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -65,87 +65,87 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="이름"
-                android:textColor="@color/gray_text_label"
-                android:textSize="13sp" />
+                android:textColor="@color/whs_black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/etName"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_edittext"
                 android:hint="이름을 입력해주세요"
                 android:inputType="textPersonName"
                 android:paddingHorizontal="16dp"
-                android:textColor="@color/whs_black"
-                android:textColorHint="@color/gray_text_hint"
-                android:textSize="15sp" />
+                android:textSize="14sp"
+                android:textColorHint="@color/gray_text_hint" />
 
             <!-- 이메일 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="20dp"
                 android:text="이메일"
-                android:textColor="@color/gray_text_label"
-                android:textSize="13sp" />
+                android:textColor="@color/whs_black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/etEmail"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_edittext"
-                android:hint="you@example.com"
+                android:hint="이메일을 입력해주세요"
                 android:inputType="textEmailAddress"
                 android:paddingHorizontal="16dp"
-                android:textColor="@color/whs_black"
-                android:textColorHint="@color/gray_text_hint"
-                android:textSize="15sp" />
+                android:textSize="14sp"
+                android:textColorHint="@color/gray_text_hint" />
 
             <!-- 휴대폰 번호 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="20dp"
                 android:text="휴대폰 번호"
-                android:textColor="@color/gray_text_label"
-                android:textSize="13sp" />
+                android:textColor="@color/whs_black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/etPhone"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_edittext"
-                android:hint="010-0000-0000"
+                android:hint="휴대폰 번호를 입력해주세요"
                 android:inputType="phone"
                 android:paddingHorizontal="16dp"
-                android:textColor="@color/whs_black"
-                android:textColorHint="@color/gray_text_hint"
-                android:textSize="15sp" />
+                android:textSize="14sp"
+                android:textColorHint="@color/gray_text_hint" />
 
             <!-- 비밀번호 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="20dp"
                 android:text="비밀번호"
-                android:textColor="@color/gray_text_label"
-                android:textSize="13sp" />
+                android:textColor="@color/whs_black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_edittext"
-                android:hint="........"
+                android:hint="비밀번호를 입력해주세요"
                 android:inputType="textPassword"
                 android:paddingHorizontal="16dp"
-                android:textColor="@color/whs_black"
-                android:textColorHint="@color/gray_text_hint"
-                android:textSize="15sp" />
+                android:textSize="14sp"
+                android:textColorHint="@color/gray_text_hint" />
 
         </LinearLayout>
     </ScrollView>
@@ -154,26 +154,15 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnSignUp"
         android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:layout_marginBottom="16dp"
+        android:layout_height="56dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/bg_button_black"
         android:text="가입하고 시작하기"
-        android:textAllCaps="false"
         android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
-    <ProgressBar
-        android:id="@+id/pbSignUpLoading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
