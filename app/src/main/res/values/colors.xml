@@ -18,9 +18,4 @@
     <color name="amred">#A3A9FF</color>
     <!-- 윔 -->
     <color name="wim">#7AD9B5</color>
-
-    <!-- UI Colors -->
-    <color name="gray_text_label">#767676</color>
-    <color name="gray_text_hint">#B0B0B0</color>
-    <color name="gray_border">#E0E0E0</color>
 </resources>
