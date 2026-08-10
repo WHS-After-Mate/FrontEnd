@@ -15,11 +15,12 @@ public class MyInfoViewModel extends ViewModel {
     private final String phoneNumber = "010-1111-2222";
 
     private final List<String> interestGoals = Arrays.asList(
-            "리프팅", "붓기 케어", "모공·피지 관리",
-            "보습·장벽 강화", "색소침착 개선", "바디라인 개선"
+            "리프팅·탄력", "모공·피지 관리", "보습·장벽 강화", "색소침착 개선",
+            "얼굴 윤곽·볼륨", "제모", "두피 관리",
+            "바디라인·체형 관리", "붓기 케어", "컨디션·대사 관리"
     );
 
-    private final Set<String> selectedGoals = new LinkedHashSet<>(Arrays.asList("리프팅", "붓기 케어"));
+    private final Set<String> selectedGoals = new LinkedHashSet<>(Arrays.asList("리프팅·탄력", "붓기 케어"));
 
     public String getUserName() {
         return userName;
