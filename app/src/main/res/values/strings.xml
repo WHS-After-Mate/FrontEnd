@@ -4,6 +4,7 @@
     <string name="title_mycare">My Care</string>
     <string name="title_aiguide">AI 가이드</string>
     <string name="title_settings">설정</string>
+    <string name="title_login">로그인</string>
 
     <!-- Home -->
     <string name="home_greeting">안녕하세요, %1$s님</string>

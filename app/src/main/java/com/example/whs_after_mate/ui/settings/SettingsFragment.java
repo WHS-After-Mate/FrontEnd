@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,7 +35,7 @@ public class SettingsFragment extends Fragment {
                 NavHostFragment.findNavController(this).navigate(R.id.action_navigation_settings_to_myInfoFragment));
 
         binding.buttonLogout.setOnClickListener(v ->
-                Toast.makeText(requireContext(), R.string.settings_logout, Toast.LENGTH_SHORT).show());
+                NavHostFragment.findNavController(this).navigate(R.id.action_navigation_settings_to_loginFragment));
 
         return root;
     }
