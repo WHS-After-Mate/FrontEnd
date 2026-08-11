@@ -5,12 +5,12 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.whs_after_mate.R;
 import com.example.whs_after_mate.databinding.FragmentLoginBinding;
@@ -53,15 +53,15 @@ public class LoginFragment extends Fragment {
         // 에러 메시지 관찰
         loginViewModel.getLoginErrorMessage().observe(getViewLifecycleOwner(), errorMessage -> {
             if (errorMessage != null) {
-                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+                binding.etPassword.setError(errorMessage);
             }
         });
 
         // 로그인 성공 여부 관찰
         loginViewModel.getLoginSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
             if (isSuccess) {
-                Toast.makeText(getContext(), "로그인 성공!", Toast.LENGTH_SHORT).show();
-                // TODO: 메인 화면으로 이동 로직
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_navigation_login_to_navigation_home);
             }
         });
     }
@@ -77,18 +77,14 @@ public class LoginFragment extends Fragment {
         });
 
         // 비밀번호 찾기 클릭
-        binding.tvForgotPassword.setOnClickListener(v -> {
-            // TODO: 비밀번호 찾기 화면으로 이동 (Navigation 이용 시)
-            // Navigation.findNavController(v).navigate(R.id.action_loginFragment_to_resetPasswordFragment);
-            Toast.makeText(getContext(), "비밀번호 찾기 화면으로 이동합니다.", Toast.LENGTH_SHORT).show();
-        });
+        binding.tvForgotPassword.setOnClickListener(v ->
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_navigation_login_to_navigation_reset_password));
 
         // 회원가입 안내 클릭
-        binding.tvSignUpGuide.setOnClickListener(v -> {
-            // TODO: 회원가입 화면으로 이동
-            // Navigation.findNavController(v).navigate(R.id.action_loginFragment_to_signUpFragment);
-            Toast.makeText(getContext(), "회원가입 화면으로 이동합니다.", Toast.LENGTH_SHORT).show();
-        });
+        binding.tvSignUpGuide.setOnClickListener(v ->
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_navigation_login_to_navigation_sign_up));
     }
 
     private boolean validateInput() {
