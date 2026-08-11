@@ -1,173 +1,426 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    android:padding="24dp"
-    tools:context=".ui.auth.SignUpFragment">
+    android:fillViewport="true">
 
-    <!-- 상단 뒤로가기 버튼 -->
-    <ImageView
-        android:id="@+id/btnBack"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_back"
-        android:padding="4dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:padding="24dp"
+        tools:context=".ui.auth.SignUpFragment">
 
-    <!-- 타이틀 및 설명 -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="회원가입"
-        android:textColor="@color/whs_black"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnBack" />
+        <!-- 상단 영역 -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="-12dp"
+            android:layout_marginTop="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvSubtitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="몇 가지 정보만 알려주시면 시작할 수 있어요"
-        android:textColor="@color/whs_black"
-        android:alpha="0.5"
-        android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
-
-    <!-- 입력 폼 영역 -->
-    <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="16dp"
-        android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/btnSignUp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_marginTop="24dp"
+            android:text="회원가입"
+            android:textColor="@color/whs_black"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnBack" />
 
-            <!-- 이름 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="이름"
-                android:textColor="@color/whs_black"
-                android:alpha="0.5"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:alpha="0.6"
+            android:text="몇 가지 정보만 알려주시면 시작할 수 있어요"
+            android:textColor="@color/whs_black"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
-            <EditText
-                android:id="@+id/etName"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_edittext"
-                android:hint="이메일을 입력해주세요"
-                android:inputType="textPersonName"
-                android:paddingHorizontal="16dp"
-                android:textSize="14sp"
-                android:textColorHint="#4D0A0A0B" />
+        <!-- 입력 폼 -->
+        <!-- 이름 -->
+        <TextView
+            android:id="@+id/tvNameLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:alpha="0.5"
+            android:text="이름"
+            android:textColor="@color/whs_black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSubtitle" />
 
-            <!-- 이메일 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="이메일"
-                android:textColor="@color/whs_black"
-                android:alpha="0.5"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_edittext"
+            android:hint="이름을 입력해주세요"
+            android:inputType="textPersonName"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/whs_black"
+            android:textColorHint="#4D0A0A0B"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvNameLabel" />
 
-            <EditText
-                android:id="@+id/etEmail"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_edittext"
-                android:hint="이메일을 입력해주세요"
-                android:inputType="textEmailAddress"
-                android:paddingHorizontal="16dp"
-                android:textSize="14sp"
-                android:textColorHint="#4D0A0A0B" />
+        <!-- 생년월일 -->
+        <TextView
+            android:id="@+id/tvBirthLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:alpha="0.5"
+            android:text="생년월일"
+            android:textColor="@color/whs_black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etName" />
 
-            <!-- 휴대폰 번호 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="휴대폰 번호"
-                android:textColor="@color/whs_black"
-                android:alpha="0.5"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+        <EditText
+            android:id="@+id/etBirth"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_edittext"
+            android:hint="2026-01-01"
+            android:inputType="date"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/whs_black"
+            android:textColorHint="#4D0A0A0B"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvBirthLabel" />
 
-            <EditText
-                android:id="@+id/etPhone"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_edittext"
-                android:hint="휴대폰 번호를 입력해주세요"
-                android:inputType="phone"
-                android:paddingHorizontal="16dp"
-                android:textSize="14sp"
-                android:textColorHint="#4D0A0A0B" />
+        <!-- 이메일 -->
+        <TextView
+            android:id="@+id/tvEmailLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:alpha="0.5"
+            android:text="이메일"
+            android:textColor="@color/whs_black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etBirth" />
 
-            <!-- 비밀번호 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="비밀번호"
-                android:textColor="@color/whs_black"
-                android:alpha="0.5"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_edittext"
+            android:hint="you@example.com"
+            android:inputType="textEmailAddress"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/whs_black"
+            android:textColorHint="#4D0A0A0B"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvEmailLabel" />
+
+        <!-- 휴대폰 번호 -->
+        <TextView
+            android:id="@+id/tvPhoneLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:alpha="0.5"
+            android:text="휴대폰 번호"
+            android:textColor="@color/whs_black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etEmail" />
+
+        <EditText
+            android:id="@+id/etPhone"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_edittext"
+            android:hint="010-0000-0000"
+            android:inputType="phone"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/whs_black"
+            android:textColorHint="#4D0A0A0B"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvPhoneLabel" />
+
+        <!-- 비밀번호 -->
+        <TextView
+            android:id="@+id/tvPasswordLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:alpha="0.5"
+            android:text="비밀번호"
+            android:textColor="@color/whs_black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etPhone" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutPassword"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_edittext"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvPasswordLabel">
 
             <EditText
                 android:id="@+id/etPassword"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_edittext"
-                android:hint="비밀번호를 입력해주세요"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:hint="••••••••"
                 android:inputType="textPassword"
                 android:paddingHorizontal="16dp"
+                android:textColor="@color/whs_black"
+                android:textColorHint="#4D0A0A0B"
                 android:textSize="14sp"
-                android:textColorHint="#4D0A0A0B" />
+                app:layout_constraintEnd_toStartOf="@id/ivPasswordToggle"
+                app:layout_constraintStart_toStartOf="parent" />
 
-        </LinearLayout>
-    </ScrollView>
+            <ImageView
+                android:id="@+id/ivPasswordToggle"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp"
+                android:src="@drawable/ic_eye_alpha"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- 하단 가입 버튼 -->
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btnSignUp"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_button_black"
-        android:text="가입하고 시작하기"
-        android:textColor="@color/white"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        <!-- 비밀번호 재확인 -->
+        <TextView
+            android:id="@+id/tvConfirmPasswordLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:alpha="0.5"
+            android:text="비밀번호 재확인"
+            android:textColor="@color/whs_black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/layoutPassword" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutConfirmPassword"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_edittext"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvConfirmPasswordLabel">
+
+            <EditText
+                android:id="@+id/etConfirmPassword"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:hint="••••••••"
+                android:inputType="textPassword"
+                android:paddingHorizontal="16dp"
+                android:textColor="@color/whs_black"
+                android:textColorHint="#4D0A0A0B"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@id/ivConfirmPasswordToggle"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <ImageView
+                android:id="@+id/ivConfirmPasswordToggle"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp"
+                android:src="@drawable/ic_eye_alpha"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- 관심 목표 섹션 -->
+        <TextView
+            android:id="@+id/tvInterestLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:alpha="0.5"
+            android:text="관심 목표"
+            android:textColor="@color/whs_black"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/layoutConfirmPassword" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupInterest"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:chipSpacingHorizontal="8dp"
+            app:chipSpacingVertical="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvInterestLabel">
+
+            <!-- 칩 아이템들 (Java/Kotlin에서 .isSelected = true로 상태 제어 가능) -->
+            <!-- 리프팅·탄력 (Selected) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="리프팅·탄력"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp"
+                android:tag="selected"
+                tools:background="@drawable/bg_chip_selected"
+                tools:textColor="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="모공·피지 관리"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="보습·장벽 강화"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="색소침착 개선"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="얼굴 윤곽·볼륨"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="제모"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="두피 관리"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="바디라인·체형 관리"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp" />
+
+            <!-- 붓기 케어 (Selected) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="붓기 케어"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp"
+                tools:background="@drawable/bg_chip_selected"
+                tools:textColor="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sl_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="컨디션·대사 관리"
+                android:textColor="@color/sl_chip_text_color"
+                android:textSize="12sp" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- 하단 메인 버튼 -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnSignUp"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="48dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_button_black"
+            app:backgroundTint="@null"
+            android:text="가입하고 시작하기"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/chipGroupInterest"
+            app:layout_constraintVertical_bias="1.0" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

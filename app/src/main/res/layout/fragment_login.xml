@@ -8,7 +8,7 @@
     android:padding="24dp"
     tools:context=".ui.auth.LoginFragment">
 
-    <!-- 로고 및 타이틀 영역 -->
+    <!-- 로고 영역 -->
     <ImageView
         android:id="@+id/ivLogo"
         android:layout_width="wrap_content"
@@ -18,14 +18,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- 헤더 타이틀 -->
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="32dp"
         android:text="관리 이후도, 함께할게요"
         android:textColor="@color/whs_black"
-        android:textSize="22sp"
+        android:fontFamily="sans-serif-black"
+        android:textSize="26sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/ivLogo" />
@@ -34,24 +36,22 @@
         android:id="@+id/tvSubtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:text="최근 관리 이력과 오늘의 사후관리 안내를 확인해보세요"
-        android:textColor="@color/whs_black"
-        android:alpha="0.5"
-        android:textSize="14sp"
+        android:textColor="#8E8E8E"
+        android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
-    <!-- 입력 폼: 이메일 -->
+    <!-- 이메일 입력 섹션 -->
     <TextView
         android:id="@+id/tvEmailLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="40dp"
         android:text="이메일"
-        android:textColor="@color/whs_black"
-        android:alpha="0.5"
+        android:textColor="#8E8E8E"
         android:textSize="14sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -60,46 +60,68 @@
     <EditText
         android:id="@+id/etEmail"
         android:layout_width="0dp"
-        android:layout_height="52dp"
+        android:layout_height="56dp"
         android:layout_marginTop="8dp"
         android:background="@drawable/bg_edittext"
-        android:hint="이메일을 입력해주세요"
+        android:hint="you@example.com"
         android:inputType="textEmailAddress"
         android:paddingHorizontal="16dp"
-        android:textSize="14sp"
-        android:textColorHint="#4D0A0A0B"
+        android:textColor="@color/whs_black"
+        android:textColorHint="#BCBCBC"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvEmailLabel" />
 
-    <!-- 입력 폼: 비밀번호 -->
+    <!-- 비밀번호 입력 섹션 -->
     <TextView
         android:id="@+id/tvPasswordLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="24dp"
         android:text="비밀번호"
-        android:textColor="@color/whs_black"
-        android:alpha="0.5"
+        android:textColor="#8E8E8E"
         android:textSize="14sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/etEmail" />
 
-    <EditText
-        android:id="@+id/etPassword"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clPasswordContainer"
         android:layout_width="0dp"
-        android:layout_height="52dp"
+        android:layout_height="56dp"
         android:layout_marginTop="8dp"
-        android:background="@drawable/bg_edittext"
-        android:hint="비밀번호를 입력해주세요"
-        android:inputType="textPassword"
-        android:paddingHorizontal="16dp"
-        android:textSize="14sp"
-        android:textColorHint="#4D0A0A0B"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvPasswordLabel" />
+        app:layout_constraintTop_toBottomOf="@id/tvPasswordLabel">
+
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_edittext"
+            android:hint="••••••••"
+            android:inputType="textPassword"
+            android:paddingStart="16dp"
+            android:paddingEnd="48dp"
+            android:textColor="@color/whs_black"
+            android:textColorHint="#BCBCBC"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/ivPasswordToggle"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/ic_eye_alpha"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="#BCBCBC" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 비밀번호 찾기 -->
     <TextView
@@ -108,36 +130,35 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:text="비밀번호를 잊으셨나요?"
-        android:textColor="@color/whs_black"
-        android:alpha="0.5"
-        android:textSize="12sp"
+        android:textColor="#8E8E8E"
+        android:textSize="13sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etPassword" />
+        app:layout_constraintTop_toBottomOf="@id/clPasswordContainer" />
 
     <!-- 로그인 버튼 -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnLogin"
         android:layout_width="0dp"
         android:layout_height="60dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="48dp"
         android:background="@drawable/bg_button_black"
         android:text="로그인"
         android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold"
+        app:backgroundTint="@null"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvForgotPassword" />
 
-    <!-- 하단 회원가입 안내 -->
+    <!-- 하단 회원가입 가이드 -->
     <TextView
         android:id="@+id/tvSignUpGuide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:text="아직 계정이 없으신가요? 회원가입"
-        android:textColor="@color/whs_black"
-        android:alpha="0.5"
+        android:textColor="#8E8E8E"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

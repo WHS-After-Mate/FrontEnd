@@ -1,22 +1,457 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment">
+    android:background="@color/background"
+    android:fillViewport="true"
+    android:scrollbars="none">
 
-    <TextView
-        android:id="@+id/text_home"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:padding="24dp">
+
+        <!-- 상단 인사말 영역 -->
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="7월 31일 · 울쎄라 리프팅 5일차"
+            android:textColor="#8E8E8E"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvGreeting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="안녕하세요, 지수님"
+            android:textColor="@color/whs_black"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvDate" />
+
+        <!-- [방법 1] 프로필 아이콘: 원형 배경 + 이니셜 -->
+        <FrameLayout
+            android:id="@+id/flProfile"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/ic_shape_circle_filled"
+            android:backgroundTint="@color/whs_black"
+            app:layout_constraintBottom_toBottomOf="@id/tvGreeting"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tvDate">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="지"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- 오늘의 사후관리 카드 (Black) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cvAftercare"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            app:cardBackgroundColor="@color/whs_black"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvGreeting">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="24dp">
+
+                <View
+                    android:id="@+id/vDot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/ic_shape_circle_filled"
+                    android:backgroundTint="@color/amred"
+                    app:layout_constraintBottom_toBottomOf="@id/tvBrandTitle"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/tvBrandTitle" />
+
+                <TextView
+                    android:id="@+id/tvBrandTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="엠레드 · 오늘의 사후관리"
+                    android:textColor="#BCBCBC"
+                    android:textSize="13sp"
+                    app:layout_constraintStart_toEndOf="@id/vDot"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvCareTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="울쎄라 리프팅 · 5일차 케어"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvBrandTitle" />
+
+                <TextView
+                    android:id="@+id/tvCareDesc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="회복기 중반, 오늘 지켜야 할 점을 확인해보세요"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvCareTitle" />
+
+                <TextView
+                    android:id="@+id/btnAiGuide"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="28dp"
+                    android:text="AI 가이드 보기 →"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvCareDesc" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- AI에게 바로 물어보기 카드 (White) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cvAiChat"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cvAftercare">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp">
+
+                <ImageView
+                    android:id="@+id/ivChatIcon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_ai_chat_sparkle"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvChatTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="AI에게 바로 물어보기"
+                    android:textColor="@color/whs_black"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@id/ivChatIcon"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvChatSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="궁금한 점을 챗봇에게 질문해보세요"
+                    android:textColor="#8E8E8E"
+                    android:textSize="13sp"
+                    app:layout_constraintStart_toStartOf="@id/tvChatTitle"
+                    app:layout_constraintTop_toBottomOf="@id/tvChatTitle" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:alpha="0.3"
+                    android:src="@drawable/ic_chevron_right"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/whs_black" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 다음 관리 추천 섹션 -->
+        <TextView
+            android:id="@+id/tvRecommendHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="다음 관리 추천"
+            android:textColor="#8E8E8E"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cvAiChat" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cvRecommend"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvRecommendHeader">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tvRecommendTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="브라이트닝 부스터 케어"
+                    android:textColor="@color/whs_black"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvRecommendDesc"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="울쎄라 시술 후 남을 수 있는 색소침착 예방을 위해 추천드려요"
+                    android:textColor="#8E8E8E"
+                    android:textSize="13sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvRecommendTitle" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRecommendDetail"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="20dp"
+                    android:text="✨ 추천 상세 보기"
+                    android:textColor="@color/whs_black"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="12dp"
+                    app:layout_constraintTop_toBottomOf="@id/tvRecommendDesc"
+                    app:strokeColor="#EAEAEA" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 이용권 현황 섹션 -->
+        <TextView
+            android:id="@+id/tvTicketHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="이용권 현황"
+            android:textColor="#8E8E8E"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cvRecommend" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cvTicket"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTicketHeader">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp">
+
+                <!-- 엠레드 -->
+                <View
+                    android:id="@+id/vAmredDot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/ic_shape_circle_filled"
+                    android:backgroundTint="@color/amred"
+                    app:layout_constraintBottom_toBottomOf="@id/tvAmredTicket"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/tvAmredTicket" />
+
+                <TextView
+                    android:id="@+id/tvAmredTicket"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="엠레드 울쎄라 3회권"
+                    android:textColor="@color/whs_black"
+                    android:textSize="15sp"
+                    app:layout_constraintStart_toEndOf="@id/vAmredDot"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="잔여 1회 ›"
+                    android:textColor="#BCBCBC"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="@id/tvAmredTicket"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/tvAmredTicket" />
+
+                <ProgressBar
+                    android:id="@+id/pbAmred"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="12dp"
+                    android:max="3"
+                    android:progress="2"
+                    android:progressDrawable="@drawable/sl_chip_background"
+                    android:progressTint="@color/amred"
+                    app:layout_constraintTop_toBottomOf="@id/tvAmredTicket" />
+
+                <!-- 더나 -->
+                <View
+                    android:id="@+id/vDernaDot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="28dp"
+                    android:background="@drawable/ic_shape_circle_filled"
+                    android:backgroundTint="@color/derna"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/pbAmred" />
+
+                <TextView
+                    android:id="@+id/tvDernaTicket"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="더나 입술 필러"
+                    android:textColor="@color/whs_black"
+                    android:textSize="15sp"
+                    app:layout_constraintBottom_toBottomOf="@id/vDernaDot"
+                    app:layout_constraintStart_toEndOf="@id/vDernaDot"
+                    app:layout_constraintTop_toTopOf="@id/vDernaDot" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="잔여 1회 ›"
+                    android:textColor="#BCBCBC"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="@id/tvDernaTicket"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/tvDernaTicket" />
+
+                <ProgressBar
+                    android:id="@+id/pbDerna"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="12dp"
+                    android:max="1"
+                    android:progress="1"
+                    android:progressDrawable="@drawable/sl_chip_background"
+                    android:progressTint="@color/derna"
+                    app:layout_constraintTop_toBottomOf="@id/tvDernaTicket" />
+
+                <!-- 윔 -->
+                <View
+                    android:id="@+id/vWimDot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="28dp"
+                    android:background="@drawable/ic_shape_circle_filled"
+                    android:backgroundTint="@color/wim"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/pbDerna" />
+
+                <TextView
+                    android:id="@+id/tvWimTicket"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="윔 지방분해 3회권"
+                    android:textColor="@color/whs_black"
+                    android:textSize="15sp"
+                    app:layout_constraintBottom_toBottomOf="@id/vWimDot"
+                    app:layout_constraintStart_toEndOf="@id/vWimDot"
+                    app:layout_constraintTop_toTopOf="@id/vWimDot" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="잔여 2회 ›"
+                    android:textColor="#BCBCBC"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="@id/tvWimTicket"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/tvWimTicket" />
+
+                <ProgressBar
+                    android:id="@+id/pbWim"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="12dp"
+                    android:max="3"
+                    android:progress="1"
+                    android:progressDrawable="@drawable/sl_chip_background"
+                    android:progressTint="@color/wim"
+                    app:layout_constraintTop_toBottomOf="@id/tvWimTicket" />
+
+                <TextView
+                    android:id="@+id/btnViewAllTickets"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="28dp"
+                    android:text="전체 이용권 보기 ›"
+                    android:textColor="#8E8E8E"
+                    android:textSize="15sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/pbWim" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 하단 여백 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            app:layout_constraintTop_toBottomOf="@id/cvTicket" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
