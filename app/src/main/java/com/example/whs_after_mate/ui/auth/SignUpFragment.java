@@ -5,13 +5,14 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.whs_after_mate.R;
 import com.example.whs_after_mate.databinding.FragmentSignUpBinding;
 
 public class SignUpFragment extends Fragment {
@@ -68,15 +69,15 @@ public class SignUpFragment extends Fragment {
         // 에러 메시지 관찰
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (error != null) {
-                Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+                binding.etEmail.setError(error);
             }
         });
 
         // 가입 성공 여부 관찰
         viewModel.getSignUpSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
             if (isSuccess) {
-                Toast.makeText(getContext(), "회원가입 성공! 환영합니다.", Toast.LENGTH_SHORT).show();
-                // TODO: 메인 화면 또는 로그인 화면으로 이동
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_navigation_sign_up_to_navigation_login);
             }
         });
     }

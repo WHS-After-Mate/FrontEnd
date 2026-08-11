@@ -64,7 +64,7 @@ public class ResetPasswordFragment extends Fragment {
         // 에러 메시지 관찰
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (error != null) {
-                Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+                binding.etEmail.setError(error);
             }
         });
 
