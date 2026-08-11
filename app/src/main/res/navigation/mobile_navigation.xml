@@ -23,9 +23,24 @@
         android:label="@string/title_aiguide"
         tools:layout="@layout/fragment_aiguide" />
 
-    <fragment
+    <navigation
         android:id="@+id/navigation_settings"
-        android:name="com.example.whs_after_mate.ui.settings.SettingsFragment"
-        android:label="@string/title_settings"
-        tools:layout="@layout/fragment_settings" />
+        app:startDestination="@id/settingsFragment">
+
+        <fragment
+            android:id="@+id/settingsFragment"
+            android:name="com.example.whs_after_mate.ui.settings.SettingsFragment"
+            android:label="@string/title_settings"
+            tools:layout="@layout/fragment_settings">
+            <action
+                android:id="@+id/action_navigation_settings_to_myInfoFragment"
+                app:destination="@id/myInfoFragment" />
+        </fragment>
+
+        <fragment
+            android:id="@+id/myInfoFragment"
+            android:name="com.example.whs_after_mate.ui.settings.MyInfoFragment"
+            android:label="@string/my_info_title"
+            tools:layout="@layout/fragment_my_info" />
+    </navigation>
 </navigation>
