@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 선택(Selected) 또는 체크(Checked) 상태일 때 흰색(@color/white) 적용 -->
+    <item android:state_selected="true" android:color="@color/white" />
+    <item android:state_checked="true" android:color="@color/white" />
+
+    <!-- 기본 상태일 때 브랜드 블랙(@color/whs_black) 적용 -->
+    <item android:color="@color/whs_black" />
+</selector>
