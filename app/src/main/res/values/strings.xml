@@ -38,4 +38,20 @@
     <string name="my_info_label_new_password">변경할 비밀번호</string>
     <string name="my_info_save">저장하기</string>
     <string name="my_info_saved_toast">저장되었습니다</string>
+
+    <!-- AI Recommend -->
+    <string name="ai_recommend_title">관리 추천</string>
+    <string name="ai_recommend_heading">%1$s님을 위한\n관리 추천</string>
+    <string name="ai_recommend_subtitle">선택한 고민과 최근 관리 이력을 분석했어요</string>
+    <string name="ai_recommend_best_label">가장 추천하는 관리</string>
+    <string name="ai_recommend_reason_section">이 관리를 추천한 이유</string>
+    <string name="ai_recommend_recent_section">최근 관리와 함께 확인했어요</string>
+    <string name="ai_recommend_brand_dot">· %1$s</string>
+    <string name="ai_recommend_days_elapsed">%1$d일 경과</string>
+    <string name="ai_recommend_fit_section">이런 고민에 적합해요</string>
+    <string name="ai_recommend_consult_section">상담하기</string>
+    <string name="ai_recommend_consult_kakao">%1$s 카톡</string>
+    <string name="ai_recommend_consult_call">%1$s 전화</string>
+    <string name="ai_recommend_consult_toast">카카오톡 상담 연결 준비 중이에요</string>
+    <string name="ai_recommend_call_toast">전화 연결 준비 중이에요</string>
 </resources>

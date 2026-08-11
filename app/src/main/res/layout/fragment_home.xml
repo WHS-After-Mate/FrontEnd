@@ -214,6 +214,7 @@
                 tools:text="울쎄라 시술 후 남을 수 있는 색소침착 예방을 위해 추천드려요" />
 
             <LinearLayout
+                android:id="@+id/button_recommend_detail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
