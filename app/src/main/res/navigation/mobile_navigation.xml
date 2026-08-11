@@ -9,7 +9,17 @@
         android:id="@+id/navigation_home"
         android:name="com.example.whs_after_mate.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_navigation_home_to_aiRecommendFragment"
+            app:destination="@id/aiRecommendFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/aiRecommendFragment"
+        android:name="com.example.whs_after_mate.ui.airecommend.AiRecommendFragment"
+        android:label="@string/ai_recommend_title"
+        tools:layout="@layout/fragment_ai_recommend" />
 
     <fragment
         android:id="@+id/navigation_mycare"

@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.whs_after_mate.R;
 import com.example.whs_after_mate.databinding.FragmentHomeBinding;
@@ -33,6 +34,9 @@ public class HomeFragment extends Fragment {
         bindTodayCare(homeViewModel);
         bindRecommendation(homeViewModel);
         bindVouchers(homeViewModel);
+
+        binding.buttonRecommendDetail.setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigate(R.id.action_navigation_home_to_aiRecommendFragment));
 
         return root;
     }
