@@ -35,6 +35,11 @@
             <action
                 android:id="@+id/action_navigation_settings_to_myInfoFragment"
                 app:destination="@id/myInfoFragment" />
+            <action
+                android:id="@+id/action_navigation_settings_to_loginFragment"
+                app:destination="@id/navigation_login"
+                app:popUpTo="@id/mobile_navigation"
+                app:popUpToInclusive="true" />
         </fragment>
 
         <fragment
@@ -43,4 +48,10 @@
             android:label="@string/my_info_title"
             tools:layout="@layout/fragment_my_info" />
     </navigation>
+
+    <fragment
+        android:id="@+id/navigation_login"
+        android:name="com.example.whs_after_mate.ui.auth.LoginFragment"
+        android:label="@string/title_login"
+        tools:layout="@layout/fragment_login" />
 </navigation>
