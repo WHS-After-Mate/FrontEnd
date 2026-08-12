@@ -4,12 +4,25 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 public class SignUpViewModel extends ViewModel {
 
     // 1. 상태를 관리할 LiveData들
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> signUpSuccess = new MutableLiveData<>(false);
+
+    private final List<String> interestGoals = Arrays.asList(
+            "리프팅·탄력", "모공·피지 관리", "보습·장벽 강화", "색소침착 개선",
+            "얼굴 윤곽·볼륨", "제모", "두피 관리",
+            "바디라인·체형 관리", "붓기 케어", "컨디션·대사 관리"
+    );
+
+    private final Set<String> selectedGoals = new LinkedHashSet<>();
 
     public LiveData<Boolean> getIsLoading() {
         return isLoading;
@@ -21,6 +34,14 @@ public class SignUpViewModel extends ViewModel {
 
     public LiveData<Boolean> getSignUpSuccess() {
         return signUpSuccess;
+    }
+
+    public List<String> getInterestGoals() {
+        return interestGoals;
+    }
+
+    public Set<String> getSelectedGoals() {
+        return selectedGoals;
     }
 
     /**

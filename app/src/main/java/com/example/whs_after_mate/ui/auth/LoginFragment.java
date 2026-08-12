@@ -1,13 +1,20 @@
 package com.example.whs_after_mate.ui.auth;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
@@ -19,6 +26,7 @@ public class LoginFragment extends Fragment {
 
     private FragmentLoginBinding binding;
     private LoginViewModel loginViewModel;
+    private boolean passwordVisible = false;
 
     @Nullable
     @Override
@@ -38,6 +46,7 @@ public class LoginFragment extends Fragment {
 
         // 2. 사용자 입력 및 버튼 클릭 이벤트 처리
         setupClickListeners();
+        setupSignUpGuideText();
 
         // 3. ViewModel 상태 관찰 (Livedata Observer 설정)
         observeViewModel();
@@ -85,6 +94,42 @@ public class LoginFragment extends Fragment {
         binding.tvSignUpGuide.setOnClickListener(v ->
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.action_navigation_login_to_navigation_sign_up));
+
+        // 비밀번호 보기/숨기기 토글
+        binding.ivPasswordToggle.setOnClickListener(v -> {
+            passwordVisible = !passwordVisible;
+            applyPasswordVisibility();
+        });
+    }
+
+    private void applyPasswordVisibility() {
+        int selectionStart = binding.etPassword.getSelectionStart();
+        int selectionEnd = binding.etPassword.getSelectionEnd();
+
+        if (passwordVisible) {
+            binding.etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+            binding.ivPasswordToggle.setImageResource(R.drawable.ic_eye_open);
+        } else {
+            binding.etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            binding.ivPasswordToggle.setImageResource(R.drawable.ic_eye_alpha);
+        }
+
+        if (selectionStart >= 0 && selectionEnd >= 0) {
+            binding.etPassword.setSelection(selectionStart, selectionEnd);
+        }
+    }
+
+    private void setupSignUpGuideText() {
+        String prefix = "아직 계정이 없으신가요? ";
+        String action = "회원가입";
+        String full = prefix + action;
+
+        SpannableString spannable = new SpannableString(full);
+        spannable.setSpan(new StyleSpan(Typeface.BOLD), prefix.length(), full.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(requireContext(), R.color.whs_black)),
+                prefix.length(), full.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        binding.tvSignUpGuide.setText(spannable);
     }
 
     private boolean validateInput() {
