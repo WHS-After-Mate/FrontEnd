@@ -5,7 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    android:padding="24dp"
+    android:paddingStart="24dp"
+    android:paddingTop="24dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="32dp"
     tools:context=".ui.auth.LoginFragment">
 
     <!-- 로고 영역 -->
@@ -13,7 +16,6 @@
         android:id="@+id/ivLogo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
         android:src="@drawable/logo_black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -23,7 +25,7 @@
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:text="관리 이후도, 함께할게요"
         android:textColor="@color/whs_black"
         android:fontFamily="sans-serif-black"
@@ -36,7 +38,7 @@
         android:id="@+id/tvSubtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="최근 관리 이력과 오늘의 사후관리 안내를 확인해보세요"
         android:textColor="#8E8E8E"
         android:textSize="15sp"
@@ -49,7 +51,7 @@
         android:id="@+id/tvEmailLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="32dp"
         android:text="이메일"
         android:textColor="#8E8E8E"
         android:textSize="14sp"
@@ -78,7 +80,7 @@
         android:id="@+id/tvPasswordLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="20dp"
         android:text="비밀번호"
         android:textColor="#8E8E8E"
         android:textSize="14sp"
@@ -116,11 +118,11 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="16dp"
+            android:contentDescription="@null"
             android:src="@drawable/ic_eye_alpha"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="#BCBCBC" />
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 비밀번호 찾기 -->
@@ -139,8 +141,8 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnLogin"
         android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="48dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="24dp"
         android:background="@drawable/bg_button_black"
         android:text="로그인"
         android:textColor="@color/white"
@@ -156,8 +158,6 @@
         android:id="@+id/tvSignUpGuide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="아직 계정이 없으신가요? 회원가입"
         android:textColor="#8E8E8E"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
