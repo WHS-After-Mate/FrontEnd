@@ -55,4 +55,9 @@
     <string name="ai_recommend_consult_call">%1$s 전화</string>
     <string name="ai_recommend_consult_toast">카카오톡 상담 연결 준비 중이에요</string>
     <string name="ai_recommend_call_toast">전화 연결 준비 중이에요</string>
+
+    <!-- My Care -->
+    <string name="mycare_month_year_format">%1$d년 %2$d월</string>
+    <string name="mycare_history_title_format">%1$d월 %2$d일 관리 내역</string>
+    <string name="mycare_history_empty">관리한 내역이 없어요</string>
 </resources>

@@ -30,4 +30,8 @@
 
     <!-- Settings -->
     <color name="switch_track_off">#E4E4E4</color>
+
+    <!-- My Care 캘린더 -->
+    <color name="calendar_accent">#3B6CF6</color>
+    <color name="today_pill_bg">#EDEDED</color>
 </resources>
