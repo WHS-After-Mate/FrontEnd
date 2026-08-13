@@ -1,6 +1,7 @@
 package com.example.whs_after_mate;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -22,6 +23,14 @@ public class MainActivity extends AppCompatActivity {
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         NavigationUI.setupWithNavController(binding.navView, navController);
+
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            int destinationId = destination.getId();
+            boolean isAuthScreen = destinationId == R.id.navigation_login
+                    || destinationId == R.id.navigation_sign_up
+                    || destinationId == R.id.navigation_reset_password;
+            binding.navView.setVisibility(isAuthScreen ? View.GONE : View.VISIBLE);
+        });
     }
 
 }

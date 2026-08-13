@@ -4,6 +4,57 @@
     <string name="title_mycare">My Care</string>
     <string name="title_aiguide">AI 가이드</string>
     <string name="title_settings">설정</string>
+    <string name="title_login">로그인</string>
+
+    <!-- Home -->
+    <string name="home_greeting">안녕하세요, %1$s님</string>
+    <string name="home_care_ai_guide_cta">AI 가이드 보기 →</string>
+    <string name="home_ask_ai_title">AI에게 바로 물어보기</string>
+    <string name="home_ask_ai_subtitle">궁금한 점을 챗봇에게 질문해보세요</string>
+    <string name="home_next_care_section">다음 관리 추천</string>
+    <string name="home_recommend_cta">추천 상세 보기</string>
+    <string name="home_voucher_section">이용권 현황</string>
+    <string name="home_voucher_remaining">잔여 %1$d회 ﹥</string>
+    <string name="home_voucher_view_all">전체 이용권 보기 ﹥</string>
+
+    <!-- Settings -->
+    <string name="user_name_honorific">%1$s님</string>
+    <string name="settings_notification_section">알림 설정</string>
+    <string name="settings_care_notification_title">사후관리 알림</string>
+    <string name="settings_care_notification_subtitle">경과일에 맞는 케어 안내를 받아요</string>
+    <string name="settings_marketing_notification_title">마케팅 알림</string>
+    <string name="settings_marketing_notification_subtitle">혜택 및 이벤트 소식을 받아요</string>
+    <string name="settings_logout">로그아웃</string>
+
+    <!-- My Info -->
+    <string name="my_info_title">내 정보</string>
+    <string name="my_info_section_member">회원 정보</string>
+    <string name="my_info_label_name">이름</string>
+    <string name="my_info_label_birth">생년월일</string>
+    <string name="my_info_label_email">이메일</string>
+    <string name="my_info_label_phone">휴대폰 번호</string>
+    <string name="my_info_section_interest">관심 목표</string>
+    <string name="my_info_section_password">비밀번호 변경</string>
+    <string name="my_info_label_prev_password">이전 비밀번호</string>
+    <string name="my_info_label_new_password">변경할 비밀번호</string>
+    <string name="my_info_save">저장하기</string>
+    <string name="my_info_saved_toast">저장되었습니다</string>
+
+    <!-- AI Recommend -->
+    <string name="ai_recommend_title">관리 추천</string>
+    <string name="ai_recommend_heading">%1$s님을 위한\n관리 추천</string>
+    <string name="ai_recommend_subtitle">선택한 고민과 최근 관리 이력을 분석했어요</string>
+    <string name="ai_recommend_best_label">가장 추천하는 관리</string>
+    <string name="ai_recommend_reason_section">이 관리를 추천한 이유</string>
+    <string name="ai_recommend_recent_section">최근 관리와 함께 확인했어요</string>
+    <string name="ai_recommend_brand_dot">· %1$s</string>
+    <string name="ai_recommend_days_elapsed">%1$d일 경과</string>
+    <string name="ai_recommend_fit_section">이런 고민에 적합해요</string>
+    <string name="ai_recommend_consult_section">상담하기</string>
+    <string name="ai_recommend_consult_kakao">%1$s 카톡</string>
+    <string name="ai_recommend_consult_call">%1$s 전화</string>
+    <string name="ai_recommend_consult_toast">카카오톡 상담 연결 준비 중이에요</string>
+    <string name="ai_recommend_call_toast">전화 연결 준비 중이에요</string>
 
     <!-- My Care -->
     <string name="mycare_month_year_format">%1$d년 %2$d월</string>

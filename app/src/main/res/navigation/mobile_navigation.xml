@@ -9,7 +9,17 @@
         android:id="@+id/navigation_home"
         android:name="com.example.whs_after_mate.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_navigation_home_to_aiRecommendFragment"
+            app:destination="@id/aiRecommendFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/aiRecommendFragment"
+        android:name="com.example.whs_after_mate.ui.airecommend.AiRecommendFragment"
+        android:label="@string/ai_recommend_title"
+        tools:layout="@layout/fragment_ai_recommend" />
 
     <fragment
         android:id="@+id/navigation_mycare"
@@ -23,9 +33,65 @@
         android:label="@string/title_aiguide"
         tools:layout="@layout/fragment_aiguide" />
 
-    <fragment
+    <navigation
         android:id="@+id/navigation_settings"
-        android:name="com.example.whs_after_mate.ui.settings.SettingsFragment"
-        android:label="@string/title_settings"
-        tools:layout="@layout/fragment_settings" />
+        app:startDestination="@id/settingsFragment">
+
+        <fragment
+            android:id="@+id/settingsFragment"
+            android:name="com.example.whs_after_mate.ui.settings.SettingsFragment"
+            android:label="@string/title_settings"
+            tools:layout="@layout/fragment_settings">
+            <action
+                android:id="@+id/action_navigation_settings_to_myInfoFragment"
+                app:destination="@id/myInfoFragment" />
+            <action
+                android:id="@+id/action_navigation_settings_to_loginFragment"
+                app:destination="@id/navigation_login"
+                app:popUpTo="@id/mobile_navigation"
+                app:popUpToInclusive="true" />
+        </fragment>
+
+        <fragment
+            android:id="@+id/myInfoFragment"
+            android:name="com.example.whs_after_mate.ui.settings.MyInfoFragment"
+            android:label="@string/my_info_title"
+            tools:layout="@layout/fragment_my_info" />
+    </navigation>
+
+    <fragment
+        android:id="@+id/navigation_login"
+        android:name="com.example.whs_after_mate.ui.auth.LoginFragment"
+        android:label="@string/title_login"
+        tools:layout="@layout/fragment_login">
+        <action
+            android:id="@+id/action_navigation_login_to_navigation_sign_up"
+            app:destination="@id/navigation_sign_up" />
+        <action
+            android:id="@+id/action_navigation_login_to_navigation_reset_password"
+            app:destination="@id/navigation_reset_password" />
+        <action
+            android:id="@+id/action_navigation_login_to_navigation_home"
+            app:destination="@id/navigation_home"
+            app:popUpTo="@id/navigation_login"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_sign_up"
+        android:name="com.example.whs_after_mate.ui.auth.SignUpFragment"
+        android:label="회원가입"
+        tools:layout="@layout/fragment_sign_up">
+        <action
+            android:id="@+id/action_navigation_sign_up_to_navigation_login"
+            app:destination="@id/navigation_login"
+            app:popUpTo="@id/navigation_sign_up"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_reset_password"
+        android:name="com.example.whs_after_mate.ui.auth.ResetPasswordFragment"
+        android:label="비밀번호 재설정"
+        tools:layout="@layout/fragment_reset_password" />
 </navigation>
