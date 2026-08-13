@@ -4,4 +4,9 @@
     <string name="title_mycare">My Care</string>
     <string name="title_aiguide">AI 가이드</string>
     <string name="title_settings">설정</string>
+
+    <!-- My Care -->
+    <string name="mycare_month_year_format">%1$d년 %2$d월</string>
+    <string name="mycare_history_title_format">%1$d월 %2$d일 관리 내역</string>
+    <string name="mycare_history_empty">관리한 내역이 없어요</string>
 </resources>

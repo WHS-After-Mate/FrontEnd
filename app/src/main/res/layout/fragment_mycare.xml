@@ -1,22 +1,314 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background"
+    android:clipToPadding="false"
+    android:fillViewport="true"
     tools:context=".ui.mycare.MyCareFragment">
 
-    <TextView
-        android:id="@+id/text_mycare"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:text="My Care"
+            android:textColor="@color/whs_black"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <!-- 세그먼트 탭 -->
+        <LinearLayout
+            android:id="@+id/tabTrack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_segment_track"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/tabCalendar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_segment_selected"
+                android:gravity="center"
+                android:paddingVertical="10dp"
+                android:text="캘린더"
+                android:textColor="@color/whs_black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tabHistory"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:paddingVertical="10dp"
+                android:text="이력"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tabVoucher"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:paddingVertical="10dp"
+                android:text="이용권"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 캘린더 카드 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_card_white"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- 월 이동 헤더 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/btnPrevMonth"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@null"
+                    android:padding="6dp"
+                    android:rotation="180"
+                    android:src="@drawable/ic_chevron_right" />
+
+                <TextView
+                    android:id="@+id/textMonthYear"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="@color/whs_black"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    tools:text="2026년 7월" />
+
+                <ImageView
+                    android:id="@+id/btnNextMonth"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@null"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_chevron_right" />
+            </LinearLayout>
+
+            <!-- 요일 헤더 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView style="@style/CalendarWeekdayLabel" android:text="일" />
+                <TextView style="@style/CalendarWeekdayLabel" android:text="월" />
+                <TextView style="@style/CalendarWeekdayLabel" android:text="화" />
+                <TextView style="@style/CalendarWeekdayLabel" android:text="수" />
+                <TextView style="@style/CalendarWeekdayLabel" android:text="목" />
+                <TextView style="@style/CalendarWeekdayLabel" android:text="금" />
+                <TextView style="@style/CalendarWeekdayLabel" android:text="토" />
+            </LinearLayout>
+
+            <!-- 날짜 그리드 -->
+            <LinearLayout
+                android:id="@+id/calendarGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout style="@style/CalendarRow">
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell0" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell1" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell2" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell3" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell4" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell5" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell6" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/CalendarRow">
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell7" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell8" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell9" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell10" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell11" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell12" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell13" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/CalendarRow">
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell14" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell15" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell16" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell17" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell18" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell19" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell20" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/CalendarRow">
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell21" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell22" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell23" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell24" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell25" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell26" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell27" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/CalendarRow">
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell28" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell29" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell30" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell31" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell32" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell33" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell34" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowSix"
+                    style="@style/CalendarRow">
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell35" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell36" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell37" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell38" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell39" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell40" />
+                    <include layout="@layout/item_calendar_day" android:id="@+id/cell41" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 범례 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_dot"
+                android:backgroundTint="@color/amred" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="16dp"
+                android:text="엠레드"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_dot"
+                android:backgroundTint="@color/derna" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="16dp"
+                android:text="더나"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_dot"
+                android:backgroundTint="@color/wim" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="윔"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- 관리 내역 -->
+        <LinearLayout
+            android:id="@+id/historyCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_card_white"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_calendar_add" />
+
+                <TextView
+                    android:id="@+id/textHistoryTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/whs_black"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="7월 26일 관리 내역" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/historyItemsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/historyEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
+            android:gravity="center"
+            android:text="@string/mycare_history_empty"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</ScrollView>

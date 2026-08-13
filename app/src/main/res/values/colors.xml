@@ -7,4 +7,17 @@
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+
+    <!-- Brand palette -->
+    <color name="whs_black">#0A0A0B</color>
+    <color name="background">#FAFAF8</color>
+    <color name="text_secondary">#8E8E8E</color>
+    <color name="card_border">#EFEFEF</color>
+    <color name="calendar_accent">#3B6CF6</color>
+    <color name="today_pill_bg">#EDEDED</color>
+
+    <!-- 사업장 색상 -->
+    <color name="amred">#A3A9FF</color>
+    <color name="derna">#FFF84A</color>
+    <color name="wim">#7AD9B5</color>
 </resources>
