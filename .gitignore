@@ -1,29 +1,41 @@
+# Flutter
+.dart_tool/
+.packages
+build/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.metadata
+
+# IDE
+.idea/
+*.swp
+.vscode/
+
+# macOS
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+*.xcuserdata
 
-# Claude Code
-.claude/settings.local.json
+# Android
+android/.gradle/
+android/local.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+
+# Claude / Kiro
+.claude/
+.kiro/
+.artifacts/
+CLAUDE.md
 CLAUDE.local.md
+.kiro.toml
+.kiro.local.toml
 
-# Secrets / keys
+# Secrets
 *.jks
 *.keystore
-google-services.json
 *.env
 .env.*
-secrets.properties
-api_keys.properties
-
