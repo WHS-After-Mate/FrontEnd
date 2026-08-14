@@ -71,6 +71,13 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
+        <!-- 캘린더 탭 -->
+        <LinearLayout
+            android:id="@+id/calendarTabContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
         <!-- 캘린더 카드 -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -309,6 +316,48 @@
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- 이력 탭 -->
+        <LinearLayout
+            android:id="@+id/historyTabContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/filterChipRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:id="@+id/historyListContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/historyListEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="80dp"
+                android:gravity="center"
+                android:text="@string/mycare_history_empty"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>
