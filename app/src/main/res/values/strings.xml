@@ -60,4 +60,8 @@
     <string name="mycare_month_year_format">%1$d년 %2$d월</string>
     <string name="mycare_history_title_format">%1$d월 %2$d일 관리 내역</string>
     <string name="mycare_history_empty">관리한 내역이 없어요</string>
+    <string name="mycare_filter_all">전체</string>
+    <string name="mycare_status_completed">완료</string>
+    <string name="mycare_status_scheduled">예정</string>
+    <string name="mycare_date_visit_format">%1$d월 %2$d일 · %3$d회차</string>
 </resources>
