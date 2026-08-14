@@ -21,6 +21,13 @@ class DarkCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.whsBlack,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: child,
     );
@@ -51,6 +58,13 @@ class WhiteCard extends StatelessWidget {
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.cardBorder, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: child,
       ),

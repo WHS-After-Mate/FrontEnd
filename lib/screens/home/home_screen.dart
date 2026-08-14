@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
@@ -43,8 +44,8 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // Today's care (dark card)
-          DarkCard(
+          // Today's care (animated gradient dark card)
+          _AnimatedGradientCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -100,11 +101,9 @@ class HomeScreen extends StatelessWidget {
             onTap: () => Navigator.pushNamed(context, '/ai-chat'),
             child: Row(
               children: [
-                SvgPicture.asset(
-                  'assets/svg/ic_ai_ask.svg',
-                  width: 30,
-                  height: 30,
-                  colorFilter: const ColorFilter.mode(AppColors.whsBlack, BlendMode.srcIn),
+                const _ShimmerIcon(
+                  icon: 'assets/svg/ic_ai_ask.svg',
+                  size: 30,
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
@@ -212,7 +211,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             Text(
-              '잔여 $remaining회 ﹥',
+              '잔여 $remaining회',
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           ],
@@ -220,14 +219,146 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: used / total,
-            backgroundColor: AppColors.todayPillBg,
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 6,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: used / total),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return LinearProgressIndicator(
+                value: value,
+                backgroundColor: AppColors.todayPillBg,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+                minHeight: 6,
+              );
+            },
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AnimatedGradientCard extends StatefulWidget {
+  final Widget child;
+  const _AnimatedGradientCard({required this.child});
+
+  @override
+  State<_AnimatedGradientCard> createState() => _AnimatedGradientCardState();
+}
+
+class _AnimatedGradientCardState extends State<_AnimatedGradientCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 25),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final angle = _controller.value * 2 * pi;
+        final dx = 0.5 * (1 + cos(angle));
+        final dy = 0.5 * (1 + sin(angle));
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: RadialGradient(
+              center: Alignment(-1.0 + 2.0 * dx, -1.0 + 2.0 * dy),
+              radius: 1.5,
+              colors: const [
+                Color(0xFF1E1E3F),
+                Color(0xFF12122A),
+                Color(0xFF0A0A0B),
+              ],
+              stops: const [0.0, 0.4, 1.0],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+
+class _ShimmerIcon extends StatefulWidget {
+  final String icon;
+  final double size;
+  const _ShimmerIcon({required this.icon, required this.size});
+
+  @override
+  State<_ShimmerIcon> createState() => _ShimmerIconState();
+}
+
+class _ShimmerIconState extends State<_ShimmerIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return ShaderMask(
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment(-2.0 + 5.0 * _controller.value, -1.0 + 3.0 * _controller.value),
+              end: Alignment(-0.5 + 5.0 * _controller.value, 1.0 + 3.0 * _controller.value),
+              colors: [
+                AppColors.whsBlack,
+                AppColors.whsBlack.withValues(alpha: 0.7),
+                AppColors.whsBlack.withValues(alpha: 0.85),
+                AppColors.whsBlack,
+              ],
+              stops: const [0.0, 0.4, 0.6, 1.0],
+            ).createShader(bounds);
+          },
+          blendMode: BlendMode.srcIn,
+          child: SvgPicture.asset(
+            widget.icon,
+            width: widget.size,
+            height: widget.size,
+          ),
+        );
+      },
     );
   }
 }

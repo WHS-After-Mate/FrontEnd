@@ -59,17 +59,32 @@ class _MyCareScreenState extends State<MyCareScreen> {
           ),
         ),
 
-        // 스크롤 영역: 탭 내용
+        // 스크롤 영역: 탭 내용 (페이드 전환)
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_selectedTab == 0) _buildCalendarTab(),
-                if (_selectedTab == 1) _buildHistoryTab(),
-                if (_selectedTab == 2) _buildVoucherTab(),
-              ],
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                alignment: Alignment.topCenter,
+                children: [
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            child: SingleChildScrollView(
+              key: ValueKey(_selectedTab),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_selectedTab == 0) _buildCalendarTab(),
+                  if (_selectedTab == 1) _buildHistoryTab(),
+                  if (_selectedTab == 2) _buildVoucherTab(),
+                ],
+              ),
             ),
           ),
         ),
@@ -85,32 +100,54 @@ class _MyCareScreenState extends State<MyCareScreen> {
         color: AppColors.todayPillBg,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        children: List.generate(tabs.length, (i) {
-          final selected = _selectedTab == i;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedTab = i),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    tabs[i],
-                    style: TextStyle(
-                      color: selected ? AppColors.whsBlack : AppColors.textSecondary,
-                      fontSize: 14,
-                      fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                    ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tabWidth = (constraints.maxWidth - 8) / 3;
+          return Stack(
+            children: [
+              // 슬라이드 인디케이터
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                left: _selectedTab * tabWidth,
+                top: 0,
+                bottom: 0,
+                width: tabWidth,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
-            ),
+              // 탭 텍스트
+              Row(
+                children: List.generate(tabs.length, (i) {
+                  final selected = _selectedTab == i;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedTab = i),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Center(
+                          child: Text(
+                            tabs[i],
+                            style: TextStyle(
+                              color: selected ? AppColors.whsBlack : AppColors.textSecondary,
+                              fontSize: 14,
+                              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
           );
-        }),
+        },
       ),
     );
   }
@@ -624,6 +661,7 @@ class _VoucherExpandCard extends StatefulWidget {
 
 class _VoucherExpandCardState extends State<_VoucherExpandCard> {
   bool _expanded = false;
+  int _expandCount = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -631,12 +669,18 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
     final percent = ((used / widget.total) * 100).round();
 
     return GestureDetector(
-      onTap: () => setState(() => _expanded = !_expanded),
+      onTap: () => setState(() {
+        _expanded = !_expanded;
+        if (_expanded) _expandCount++;
+      }),
       child: AnimatedCrossFade(
         duration: const Duration(milliseconds: 300),
         crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
         firstChild: _buildCollapsed(used),
-        secondChild: _buildExpanded(used, percent),
+        secondChild: KeyedSubtree(
+          key: ValueKey(_expandCount),
+          child: _buildExpanded(used, percent),
+        ),
       ),
     );
   }
@@ -676,11 +720,18 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: used / widget.total,
-              backgroundColor: AppColors.todayPillBg,
-              valueColor: AlwaysStoppedAnimation<Color>(widget.color),
-              minHeight: 6,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: used / widget.total),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return LinearProgressIndicator(
+                  value: value,
+                  backgroundColor: AppColors.todayPillBg,
+                  valueColor: AlwaysStoppedAnimation<Color>(widget.color),
+                  minHeight: 6,
+                );
+              },
             ),
           ),
           const SizedBox(height: 10),
@@ -754,21 +805,35 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
                 SizedBox(
                   width: 140,
                   height: 140,
-                  child: CircularProgressIndicator(
-                    value: used / widget.total,
-                    strokeWidth: 12,
-                    backgroundColor: widget.color.withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(widget.color),
-                    strokeCap: StrokeCap.round,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: used / widget.total),
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return CircularProgressIndicator(
+                        value: value,
+                        strokeWidth: 12,
+                        backgroundColor: widget.color.withValues(alpha: 0.2),
+                        valueColor: AlwaysStoppedAnimation<Color>(widget.color),
+                        strokeCap: StrokeCap.round,
+                      );
+                    },
                   ),
                 ),
-                Text(
-                  '$percent%',
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+                TweenAnimationBuilder<int>(
+                  tween: IntTween(begin: 0, end: percent),
+                  duration: const Duration(milliseconds: 1000),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Text(
+                      '$value%',
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

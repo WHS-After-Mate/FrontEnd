@@ -104,51 +104,22 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
               children: [
 
           // Day chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(_checkpoints.length, (i) {
-                final checkpoint = _checkpoints[i];
-                final selected = _selectedIndex == i;
-                final label = _getChipLabel(checkpoint);
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedIndex = i),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.whsBlack : AppColors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: selected ? AppColors.whsBlack : AppColors.cardBorder,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            label,
-                            style: TextStyle(
-                              color: selected ? AppColors.white.withValues(alpha: 0.7) : AppColors.textSecondary,
-                              fontSize: 11,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'D+$checkpoint',
-                            style: TextStyle(
-                              color: selected ? AppColors.white : AppColors.whsBlack,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+          Row(
+            children: List.generate(_checkpoints.length * 2 - 1, (i) {
+              if (i.isOdd) return const SizedBox(width: 8);
+              final index = i ~/ 2;
+              final checkpoint = _checkpoints[index];
+              final selected = _selectedIndex == index;
+              final label = _getChipLabel(checkpoint);
+              return Expanded(
+                child: _DayChipButton(
+                  selected: selected,
+                  label: label,
+                  day: 'D+$checkpoint',
+                  onTap: () => setState(() => _selectedIndex = index),
+                ),
+              );
+            }),
           ),
           const SizedBox(height: 20),
 
@@ -222,13 +193,7 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
           // 더 궁금한 점 카드
           GestureDetector(
             onTap: () => Navigator.pushNamed(context, '/ai-chat'),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppColors.whsBlack,
-                borderRadius: BorderRadius.circular(16),
-              ),
+            child: _ShimmerDarkCard(
               child: Row(
                 children: [
                   SvgPicture.asset(
@@ -282,6 +247,13 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -307,6 +279,174 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DayChipButton extends StatefulWidget {
+  final bool selected;
+  final String label;
+  final String day;
+  final VoidCallback onTap;
+
+  const _DayChipButton({
+    required this.selected,
+    required this.label,
+    required this.day,
+    required this.onTap,
+  });
+
+  @override
+  State<_DayChipButton> createState() => _DayChipButtonState();
+}
+
+class _DayChipButtonState extends State<_DayChipButton> with SingleTickerProviderStateMixin {
+  late AnimationController _bounceController;
+  late Animation<double> _bounceAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _bounceAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.9), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 0.9, end: 1.05), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.05, end: 1.0), weight: 30),
+    ]).animate(CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _bounceController.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    _bounceController.forward(from: 0);
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: AnimatedBuilder(
+        animation: _bounceAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _bounceAnimation.value,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              decoration: BoxDecoration(
+                color: widget.selected ? AppColors.whsBlack : AppColors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: widget.selected ? AppColors.whsBlack : AppColors.cardBorder,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    widget.label,
+                    style: TextStyle(
+                      color: widget.selected ? AppColors.white.withValues(alpha: 0.7) : AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.day,
+                    style: TextStyle(
+                      color: widget.selected ? AppColors.white : AppColors.whsBlack,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ShimmerDarkCard extends StatefulWidget {
+  final Widget child;
+  const _ShimmerDarkCard({required this.child});
+
+  @override
+  State<_ShimmerDarkCard> createState() => _ShimmerDarkCardState();
+}
+
+class _ShimmerDarkCardState extends State<_ShimmerDarkCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: AppColors.whsBlack,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          foregroundDecoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment(-3.0 + 6.0 * _controller.value, -1.0),
+              end: Alignment(-1.5 + 6.0 * _controller.value, 1.0),
+              colors: [
+                Colors.transparent,
+                Colors.white.withValues(alpha: 0.03),
+                Colors.white.withValues(alpha: 0.06),
+                Colors.white.withValues(alpha: 0.03),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+            ),
+          ),
+          child: widget.child,
+        );
+      },
     );
   }
 }
