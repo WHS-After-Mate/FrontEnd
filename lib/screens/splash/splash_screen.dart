@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     await Future.delayed(const Duration(milliseconds: 500));
     _circleController.forward(); // 검은 원 확장
 
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 600));
     _logoController.forward(); // 로고 줌인 블러
 
     await Future.delayed(const Duration(milliseconds: 2500));

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../main_screen.dart';
@@ -35,59 +34,29 @@ class CareDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
-        onTap: (i) {
-          if (i == 1) {
-            Navigator.pop(context);
-          } else {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => MainScreen(initialTab: i)),
-            );
-          }
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset('assets/svg/ic_home_outline.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(AppColors.navIconInactive, BlendMode.srcIn)),
-            activeIcon: SvgPicture.asset('assets/svg/ic_home_fill.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(AppColors.whsBlack, BlendMode.srcIn)),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset('assets/svg/ic_care_outline.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(AppColors.navIconInactive, BlendMode.srcIn)),
-            activeIcon: SvgPicture.asset('assets/svg/ic_care_fill.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(AppColors.whsBlack, BlendMode.srcIn)),
-            label: 'My Care',
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset('assets/svg/ic_ai_guide_outline.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(AppColors.navIconInactive, BlendMode.srcIn)),
-            activeIcon: SvgPicture.asset('assets/svg/ic_ai_guide_fill.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(AppColors.whsBlack, BlendMode.srcIn)),
-            label: 'AI 가이드',
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset('assets/svg/ic_settings_outline.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(AppColors.navIconInactive, BlendMode.srcIn)),
-            activeIcon: SvgPicture.asset('assets/svg/ic_settings_fill.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(AppColors.whsBlack, BlendMode.srcIn)),
-            label: '설정',
-          ),
-        ],
-      ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Row(
+            // 메인 콘텐츠
+            Positioned.fill(
+              bottom: 72,
+              child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back_ios_new, size: 22, color: AppColors.whsBlack),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '관리 상세',
-                    style: TextStyle(
-                      color: AppColors.whsBlack,
-                      fontSize: 18,
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Icon(Icons.arrow_back_ios_new, size: 22, color: AppColors.whsBlack),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          '관리 상세',
+                          style: TextStyle(
+                            color: AppColors.whsBlack,
+                            fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -181,6 +150,29 @@ class CareDetailScreen extends StatelessWidget {
                       ),
                     ),
                   );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+
+            // 플로팅 네비게이션 바
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: FloatingNavBar(
+                currentIndex: 1,
+                onTap: (i) {
+                  if (i == 1) {
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => MainScreen(initialTab: i)),
+                    );
+                  }
                 },
               ),
             ),

@@ -1,6 +1,142 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
+
+/// 플로팅 네비게이션 바 (하위 페이지용)
+class FloatingNavBar extends StatefulWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  const FloatingNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  @override
+  State<FloatingNavBar> createState() => _FloatingNavBarState();
+}
+
+class _FloatingNavBarState extends State<FloatingNavBar> with TickerProviderStateMixin {
+  static const _items = [
+    _NavItemData('assets/svg/ic_home_outline.svg', 'assets/svg/ic_home_fill.svg', '홈'),
+    _NavItemData('assets/svg/ic_care_outline.svg', 'assets/svg/ic_care_fill.svg', 'My Care'),
+    _NavItemData('assets/svg/ic_ai_guide_outline.svg', 'assets/svg/ic_ai_guide_fill.svg', 'AI 가이드'),
+    _NavItemData('assets/svg/ic_settings_outline.svg', 'assets/svg/ic_settings_fill.svg', '설정'),
+  ];
+
+  late final List<AnimationController> _bounceControllers;
+  late final List<Animation<double>> _bounceAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounceControllers = List.generate(
+      _items.length,
+      (i) => AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 300),
+      ),
+    );
+    _bounceAnimations = _bounceControllers.map((controller) {
+      return TweenSequence<double>([
+        TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.08), weight: 40),
+        TweenSequenceItem(tween: Tween(begin: 1.08, end: 0.97), weight: 30),
+        TweenSequenceItem(tween: Tween(begin: 0.97, end: 1.0), weight: 30),
+      ]).animate(CurvedAnimation(parent: controller, curve: Curves.easeOut));
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _bounceControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 64,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE8E8E6), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(_items.length, (i) {
+          final item = _items[i];
+          final selected = widget.currentIndex == i;
+          return GestureDetector(
+            onTap: () {
+              _bounceControllers[i].forward(from: 0.0);
+              widget.onTap(i);
+            },
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: 64,
+              child: AnimatedBuilder(
+                animation: _bounceAnimations[i],
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _bounceAnimations[i].value,
+                    child: child,
+                  );
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      selected ? item.activeIcon : item.icon,
+                      width: 22,
+                      height: 22,
+                      colorFilter: ColorFilter.mode(
+                        selected ? AppColors.whsBlack : AppColors.navIconInactive,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        color: selected ? AppColors.whsBlack : AppColors.navIconInactive,
+                        fontSize: 11,
+                        fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _NavItemData {
+  final String icon;
+  final String activeIcon;
+  final String label;
+  const _NavItemData(this.icon, this.activeIcon, this.label);
+}
 
 /// 다크 카드 (어두운 배경의 라운드 카드)
 class DarkCard extends StatelessWidget {

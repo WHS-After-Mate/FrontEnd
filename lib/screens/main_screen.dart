@@ -15,10 +15,12 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late int _currentIndex;
 
   late final List<Widget> _screens;
+  late final List<AnimationController> _bounceControllers;
+  late final List<Animation<double>> _bounceAnimations;
 
   final List<_NavItem> _navItems = const [
     _NavItem('assets/svg/ic_home_outline.svg', 'assets/svg/ic_home_fill.svg', '홈'),
@@ -37,6 +39,35 @@ class _MainScreenState extends State<MainScreen> {
       const AiGuideScreen(),
       const SettingsScreen(),
     ];
+
+    _bounceControllers = List.generate(
+      _navItems.length,
+      (i) => AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 300),
+      ),
+    );
+
+    _bounceAnimations = _bounceControllers.map((controller) {
+      return TweenSequence<double>([
+        TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.08), weight: 40),
+        TweenSequenceItem(tween: Tween(begin: 1.08, end: 0.97), weight: 30),
+        TweenSequenceItem(tween: Tween(begin: 0.97, end: 1.0), weight: 30),
+      ]).animate(CurvedAnimation(parent: controller, curve: Curves.easeOut));
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _bounceControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onTabTapped(int index) {
+    setState(() => _currentIndex = index);
+    _bounceControllers[index].forward(from: 0.0);
   }
 
   @override
@@ -82,32 +113,41 @@ class _MainScreenState extends State<MainScreen> {
                     final item = _navItems[i];
                     final selected = _currentIndex == i;
                     return GestureDetector(
-                      onTap: () => setState(() => _currentIndex = i),
+                      onTap: () => _onTabTapped(i),
                       behavior: HitTestBehavior.opaque,
                       child: SizedBox(
                         width: 64,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(
-                              selected ? item.activeIcon : item.icon,
-                              width: 22,
-                              height: 22,
-                              colorFilter: ColorFilter.mode(
-                                selected ? AppColors.whsBlack : AppColors.navIconInactive,
-                                BlendMode.srcIn,
+                        child: AnimatedBuilder(
+                          animation: _bounceAnimations[i],
+                          builder: (context, child) {
+                            return Transform.scale(
+                              scale: _bounceAnimations[i].value,
+                              child: child,
+                            );
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                selected ? item.activeIcon : item.icon,
+                                width: 22,
+                                height: 22,
+                                colorFilter: ColorFilter.mode(
+                                  selected ? AppColors.whsBlack : AppColors.navIconInactive,
+                                  BlendMode.srcIn,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              item.label,
-                              style: TextStyle(
-                                color: selected ? AppColors.whsBlack : AppColors.navIconInactive,
-                                fontSize: 11,
-                                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                              const SizedBox(height: 4),
+                              Text(
+                                item.label,
+                                style: TextStyle(
+                                  color: selected ? AppColors.whsBlack : AppColors.navIconInactive,
+                                  fontSize: 11,
+                                  fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
