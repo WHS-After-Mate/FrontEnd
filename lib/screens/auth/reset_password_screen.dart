@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../utils/validators.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/auth/auth_models.dart';
+import '../../services/api/api_exception.dart';
+import '../../utils/toast.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -12,15 +16,24 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _emailController = TextEditingController();
+  final _codeController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   bool _obscureNew = true;
   bool _obscureConfirm = true;
   bool _codeSent = false;
+  bool _codeVerified = false;
+  bool _isSendingCode = false;
+  bool _isVerifyingCode = false;
+  bool _isResetting = false;
+
   String? _emailError;
   String? _newPasswordError;
   String? _confirmPasswordError;
+  String? _resetToken;
 
-  final _newPasswordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
 
   bool get _isEmailValid =>
       _emailController.text.trim().isNotEmpty && validateEmail(_emailController.text) == null;
@@ -34,16 +47,112 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   void dispose() {
     _emailController.dispose();
+    _codeController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _sendCode() {
-    setState(() => _codeSent = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('인증번호가 발송되었습니다')),
-    );
+  /// 1단계: 인증번호 발송
+  Future<void> _sendCode() async {
+    setState(() => _isSendingCode = true);
+    try {
+      await _authService.requestPasswordReset(
+        PasswordResetRequest(email: _emailController.text.trim()),
+      );
+      if (!mounted) return;
+      setState(() => _codeSent = true);
+      showToast('인증번호가 발송되었습니다');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      showToast(e.message);
+    } finally {
+      if (mounted) setState(() => _isSendingCode = false);
+    }
+  }
+
+  /// 2단계: 인증번호 확인
+  Future<void> _verifyCode() async {
+    final code = _codeController.text.trim();
+    if (code.isEmpty) {
+      showToast('인증번호를 입력해주세요');
+      return;
+    }
+
+    setState(() => _isVerifyingCode = true);
+    try {
+      final response = await _authService.verifyPasswordReset(
+        PasswordResetVerify(
+          email: _emailController.text.trim(),
+          code: code,
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _codeVerified = true;
+        _resetToken = response.resetToken;
+      });
+      showToast('인증번호가 확인되었습니다');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      String message;
+      switch (e.code) {
+        case 'INVALID_OR_EXPIRED_RESET_CODE':
+          message = '인증번호가 올바르지 않거나 만료되었습니다';
+          break;
+        default:
+          message = e.message;
+      }
+      showToast(message);
+    } finally {
+      if (mounted) setState(() => _isVerifyingCode = false);
+    }
+  }
+
+  /// 3단계: 새 비밀번호 설정
+  Future<void> _resetPassword() async {
+    final newPassword = _newPasswordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    final passwordErr = validatePassword(newPassword);
+    setState(() => _newPasswordError = passwordErr);
+    if (passwordErr != null) return;
+
+    if (newPassword != confirmPassword) {
+      setState(() => _confirmPasswordError = '비밀번호가 일치하지 않습니다');
+      return;
+    }
+
+    if (_resetToken == null) {
+      showToast('인증번호 확인을 먼저 진행해주세요');
+      return;
+    }
+
+    setState(() => _isResetting = true);
+    try {
+      await _authService.confirmPasswordReset(
+        PasswordResetConfirm(
+          resetToken: _resetToken!,
+          newPassword: newPassword,
+        ),
+      );
+      if (!mounted) return;
+      showToast('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.');
+      Navigator.pop(context);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      String message;
+      switch (e.code) {
+        case 'INVALID_OR_EXPIRED_RESET_CODE':
+          message = '재설정 토큰이 만료되었습니다. 처음부터 다시 시도해주세요.';
+          break;
+        default:
+          message = e.message;
+      }
+      showToast(message);
+    } finally {
+      if (mounted) setState(() => _isResetting = false);
+    }
   }
 
   void _onEmailChanged(String value) {
@@ -98,7 +207,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                '가입하신 이메일을 입력하시면 재설정 링크를 보내드려요',
+                '가입하신 이메일을 입력하시면 인증번호를 보내드려요',
                 style: TextStyle(
                   color: AppColors.whsBlack.withValues(alpha: 0.6),
                   fontSize: 14,
@@ -129,6 +238,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     Expanded(
                       child: TextField(
                         controller: _emailController,
+                        enabled: !_codeSent,
                         keyboardType: TextInputType.emailAddress,
                         onChanged: _onEmailChanged,
                         decoration: const InputDecoration(
@@ -143,7 +253,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
-                        onTap: _isEmailValid ? _sendCode : null,
+                        onTap: (_isEmailValid && !_isSendingCode) ? _sendCode : null,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
@@ -154,7 +264,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             ),
                           ),
                           child: Text(
-                            '인증번호 발송',
+                            _isSendingCode ? '발송 중...' : (_codeSent ? '재발송' : '인증번호 발송'),
                             style: TextStyle(
                               color: _isEmailValid ? AppColors.white : AppColors.whsBlack.withValues(alpha: 0.3),
                               fontSize: 12,
@@ -201,7 +311,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     children: [
                       Expanded(
                         child: TextField(
-                          enabled: _codeSent,
+                          controller: _codeController,
+                          enabled: _codeSent && !_codeVerified,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             hintText: '인증번호 입력',
@@ -215,26 +326,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: GestureDetector(
-                          onTap: _codeSent ? () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('인증번호가 확인되었습니다')),
-                            );
-                          } : null,
+                          onTap: (_codeSent && !_codeVerified && !_isVerifyingCode) ? _verifyCode : null,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: _codeSent ? AppColors.whsBlack : Colors.transparent,
+                              color: (_codeSent && !_codeVerified) ? AppColors.whsBlack : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: _codeSent ? AppColors.whsBlack : AppColors.cardBorder,
+                                color: (_codeSent && !_codeVerified) ? AppColors.whsBlack : AppColors.cardBorder,
                               ),
                             ),
                             child: Text(
-                              '인증번호 확인',
+                              _isVerifyingCode ? '확인 중...' : (_codeVerified ? '확인됨 ✓' : '인증번호 확인'),
                               style: TextStyle(
-                                color: _codeSent ? AppColors.white : AppColors.whsBlack.withValues(alpha: 0.3),
+                                color: (_codeSent && !_codeVerified) ? AppColors.white : AppColors.whsBlack.withValues(alpha: 0.3),
                                 fontSize: 12,
-                                fontWeight: _codeSent ? FontWeight.w600 : FontWeight.normal,
+                                fontWeight: (_codeSent && !_codeVerified) ? FontWeight.w600 : FontWeight.normal,
                               ),
                             ),
                           ),
@@ -247,38 +354,46 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               const SizedBox(height: 20),
 
               // 새 비밀번호
-              AppTextField(
-                label: '새 비밀번호',
-                hint: '••••••••',
-                obscureText: _obscureNew,
-                controller: _newPasswordController,
-                onChanged: _onNewPasswordChanged,
-                errorText: _newPasswordError,
-                suffixIcon: GestureDetector(
-                  onTap: () => setState(() => _obscureNew = !_obscureNew),
-                  child: Icon(
-                    _obscureNew ? Icons.visibility_off : Icons.visibility,
-                    color: AppColors.textSecondary,
-                    size: 22,
+              Opacity(
+                opacity: _codeVerified ? 1.0 : 0.4,
+                child: AppTextField(
+                  label: '새 비밀번호',
+                  hint: '••••••••',
+                  obscureText: _obscureNew,
+                  controller: _newPasswordController,
+                  enabled: _codeVerified,
+                  onChanged: _onNewPasswordChanged,
+                  errorText: _newPasswordError,
+                  suffixIcon: GestureDetector(
+                    onTap: () => setState(() => _obscureNew = !_obscureNew),
+                    child: Icon(
+                      _obscureNew ? Icons.visibility_off : Icons.visibility,
+                      color: AppColors.textSecondary,
+                      size: 22,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
 
               // 비밀번호 재확인
-              AppTextField(
-                label: '비밀번호 재확인',
-                hint: '••••••••',
-                obscureText: _obscureConfirm,
-                controller: _confirmPasswordController,
-                onChanged: _onConfirmPasswordChanged,
-                errorText: _confirmPasswordError,
-                suffixIcon: GestureDetector(
-                  onTap: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                  child: Icon(
-                    _obscureConfirm ? Icons.visibility_off : Icons.visibility,
-                    color: AppColors.textSecondary,
-                    size: 22,
+              Opacity(
+                opacity: _codeVerified ? 1.0 : 0.4,
+                child: AppTextField(
+                  label: '비밀번호 재확인',
+                  hint: '••••••••',
+                  obscureText: _obscureConfirm,
+                  controller: _confirmPasswordController,
+                  enabled: _codeVerified,
+                  onChanged: _onConfirmPasswordChanged,
+                  errorText: _confirmPasswordError,
+                  suffixIcon: GestureDetector(
+                    onTap: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                    child: Icon(
+                      _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                      color: AppColors.textSecondary,
+                      size: 22,
+                    ),
                   ),
                 ),
               ),
@@ -287,8 +402,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
               // 버튼
               BlackButton(
-                text: '비밀번호 변경하기',
-                onPressed: () => Navigator.pop(context),
+                text: _isResetting ? '변경 중...' : '비밀번호 변경하기',
+                onPressed: (_codeVerified && !_isResetting) ? _resetPassword : null,
               ),
               const SizedBox(height: 8),
             ],

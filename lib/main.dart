@@ -9,6 +9,10 @@ import 'screens/main_screen.dart';
 import 'screens/ai_recommend/ai_recommend_screen.dart';
 import 'screens/settings/my_info_screen.dart';
 import 'screens/chat/ai_chat_screen.dart';
+import 'screens/mycare/care_detail_screen.dart';
+
+/// 앱 전역 Navigator 키 — 인터셉터 등에서 로그인 화면 이동에 사용
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runApp(const WhsAfterMateApp());
@@ -20,10 +24,20 @@ class WhsAfterMateApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'WHS After Mate',
       theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
       initialRoute: '/splash',
+      onGenerateRoute: (settings) {
+        if (settings.name == '/care-detail') {
+          final careRecordId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (_) => CareDetailScreen(careRecordId: careRecordId),
+          );
+        }
+        return null;
+      },
       routes: {
         '/splash': (_) => const SplashScreen(),
         '/onboarding': (_) => const OnboardingScreen(),

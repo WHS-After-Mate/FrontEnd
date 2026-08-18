@@ -2,63 +2,174 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
+import '../../services/mycare/mycare_service.dart';
+import '../../services/aftercare/aftercare_service.dart';
+import '../../services/aftercare/aftercare_models.dart';
 
 class AiGuideScreen extends StatefulWidget {
-  const AiGuideScreen({super.key});
+  final String? initialCareRecordId;
+  const AiGuideScreen({super.key, this.initialCareRecordId});
 
   @override
   State<AiGuideScreen> createState() => _AiGuideScreenState();
 }
 
 class _AiGuideScreenState extends State<AiGuideScreen> {
-  // 가장 최근 관리 받은 날짜 (더미 - 나중에 API 연동)
-  final DateTime _lastCareDate = DateTime.now().subtract(const Duration(days: 5));
-  final String _careName = '울쎄라 리프팅';
-  final String _brand = '엠레드';
-  final Color _brandColor = AppColors.amred;
+  final _myCareService = MyCareService();
+  final _aftercareService = AftercareService();
+
+  DateTime? _lastCareDate;
+  String _careRecordId = '';
+  String _careName = '';
+  String _brand = '';
+  Color _brandColor = AppColors.whsBlack;
+  bool _isLoading = true;
+  bool _guideLoading = false;
+  String? _error;
 
   // D+day 체크포인트 (관리 후 가이드가 제공되는 일수)
   final List<int> _checkpoints = [1, 3, 5, 7, 14];
 
-  late int _todayDplus;
-  late int _selectedIndex;
+  int _todayDplus = 0;
+  int _selectedIndex = 0;
+
+  // AI 가이드 데이터
+  DailyGuide? _guide;
 
   @override
   void initState() {
     super.initState();
-    _todayDplus = DateTime.now().difference(_lastCareDate).inDays;
-    // 오늘과 가장 가까운 checkpoint 선택
-    _selectedIndex = _findClosestIndex();
+    _loadLatestCare();
+  }
+
+  Future<void> _loadLatestCare() async {
+    try {
+      final result = await _myCareService.getCareRecords(size: 10);
+      if (!mounted) return;
+      if (result.items.isNotEmpty) {
+        // initialCareRecordId가 지정되었으면 해당 관리를 찾고, 없으면 최근 관리 사용
+        final item = widget.initialCareRecordId != null
+            ? result.items.firstWhere(
+                (i) => i.careRecordId == widget.initialCareRecordId,
+                orElse: () => result.items.first,
+              )
+            : result.items.first;
+        setState(() {
+          _lastCareDate = DateTime.parse(item.careDate);
+          _careRecordId = item.careRecordId;
+          _careName = item.careName;
+          _brand = _brandLabel(item.brand);
+          _brandColor = _getBrandColor(item.brand);
+          _todayDplus = DateTime.now().difference(_lastCareDate!).inDays;
+          _selectedIndex = _findClosestIndex();
+        });
+        // 최근 관리 정보 로드 후 가이드 호출
+        await _loadGuide();
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadGuide() async {
+    setState(() => _guideLoading = true);
+    try {
+      final selectedDay = _checkpoints[_selectedIndex];
+      final guide = await _aftercareService.getDailyGuide(
+        careRecordId: _careRecordId,
+        elapsedDay: selectedDay,
+      );
+      if (!mounted) return;
+      setState(() {
+        _guide = guide;
+        _guideLoading = false;
+        _isLoading = false;
+        _error = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _guideLoading = false;
+        _isLoading = false;
+        _error = '가이드를 불러올 수 없습니다';
+      });
+    }
+  }
+
+  String _brandLabel(String? brand) {
+    if (brand == null || brand.isEmpty) return '';
+    final b = brand.toUpperCase();
+    if (b.contains('AMRED')) return '엠레드 클리닉';
+    if (b.contains('DERNA')) return '더나 의원';
+    if (b.contains('WIM')) return '윔 센터';
+    return brand;
+  }
+
+  Color _getBrandColor(String? brand) {
+    if (brand == null) return AppColors.whsBlack;
+    final b = brand.toUpperCase();
+    if (b.contains('AMRED')) return AppColors.amred;
+    if (b.contains('DERNA')) return AppColors.derna;
+    if (b.contains('WIM')) return AppColors.wim;
+    return AppColors.whsBlack;
   }
 
   int _findClosestIndex() {
+    // 경과일 이하인 가장 큰 체크포인트를 기본 선택
+    // 예: 11일차 → D+7(index 3), 14일차 → D+14(index 4)
+    int result = 0;
     for (int i = 0; i < _checkpoints.length; i++) {
-      if (_checkpoints[i] >= _todayDplus) return i;
+      if (_checkpoints[i] <= _todayDplus) {
+        result = i;
+      }
     }
-    return _checkpoints.length - 1;
+    return result;
   }
 
   String _getChipLabel(int checkpoint) {
+    // 현재 경과일이 이 체크포인트 구간에 해당하면 "오늘"
+    final idx = _checkpoints.indexOf(checkpoint);
+    final nextCheckpoint = idx < _checkpoints.length - 1 ? _checkpoints[idx + 1] : checkpoint + 1;
+    if (_todayDplus >= checkpoint && _todayDplus < nextCheckpoint) return '오늘';
     if (checkpoint < _todayDplus) return '완료';
-    if (checkpoint == _todayDplus) return '오늘';
     return '예정';
   }
 
-  // 더미 데이터 - 나중에 AI API로 교체
-  final List<String> _careGuides = [
-    '순한 저자극 스킨케어 제품 사용을 시작해도 좋아요.',
-    '세안 시 미온수를 사용하고 부드럽게 톡톡 두드려 건조해주세요.',
-    '자외선 차단제를 꼭 발라주세요 (SPF 50 이상 권장).',
-  ];
+  String _buildSummaryMessage() {
+    if (_guide == null) return '';
+    final day = _checkpoints[_selectedIndex];
+    if (day <= 1) {
+      return '시술 직후예요. 자극을 최소화하고 안정을 취해주세요.';
+    } else if (day <= 3) {
+      return '초기 회복기예요. 시술 부위를 보호하고 주의사항을 지켜주세요.';
+    } else if (day <= 5) {
+      return '회복기 중반이에요. 가벼운 스킨케어부터 서서히 시작해도 좋아요.';
+    } else if (day <= 7) {
+      return '안정기에 접어들었어요. 기본 관리를 꾸준히 유지해주세요.';
+    } else {
+      return '일상 복귀 시기예요. 자외선 차단과 보습을 잊지 마세요.';
+    }
+  }
 
-  final List<String> _cautions = [
-    '사우나, 찜질방 등 고온 환경은 피해주세요.',
-    '음주는 회복을 늦출 수 있으니 자제해주세요.',
-    '시술 부위를 강하게 문지르거나 자극하지 마세요.',
-  ];
+  void _onChipSelected(int index) {
+    setState(() => _selectedIndex = index);
+    _loadGuide();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.whsBlack));
+    }
+
+    if (_lastCareDate == null) {
+      return const Center(
+        child: Text('최근 관리 이력이 없습니다', style: TextStyle(color: AppColors.textSecondary)),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -116,79 +227,94 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
                   selected: selected,
                   label: label,
                   day: 'D+$checkpoint',
-                  onTap: () => setState(() => _selectedIndex = index),
+                  onTap: () => _onChipSelected(index),
                 ),
               );
             }),
           ),
           const SizedBox(height: 20),
 
-          // 오늘의 핵심 케어 (다크 카드)
-          DarkCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    SvgPicture.asset(
-                      'assets/svg/ic_ai_ask.svg',
-                      width: 22,
-                      height: 22,
-                      colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '오늘의 핵심 케어',
-                      style: TextStyle(color: AppColors.white, fontSize: 14),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  '회복기 중반이에요, 가벼운 스킨케어부터 서서히 시작해도 좋아요.',
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
+          // 가이드 콘텐츠
+          if (_guideLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(child: CircularProgressIndicator(color: AppColors.whsBlack)),
+            )
+          else if (_error != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(_error!, style: const TextStyle(color: AppColors.textSecondary)),
+              ),
+            )
+          else if (_guide != null) ...[
+            // 오늘의 핵심 케어 (다크 카드)
+            DarkCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      SvgPicture.asset(
+                        'assets/svg/ic_chat_smile_ai.svg',
+                        width: 22,
+                        height: 22,
+                        colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _guide!.isToday ? '오늘의 핵심 케어' : 'D+${_checkpoints[_selectedIndex]} 핵심 케어',
+                        style: const TextStyle(color: AppColors.white, fontSize: 14),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Text(
+                    _buildSummaryMessage(),
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 26),
+            const SizedBox(height: 26),
 
-          // 기본 사후관리 안내
-          const Text(
-            '기본 사후관리 안내',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+            // 기본 사후관리 안내
+            const Text(
+              '기본 사후관리 안내',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          ..._careGuides.map((guide) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _buildGuideItem(guide, isCheck: true),
-              )),
-          const SizedBox(height: 20),
+            const SizedBox(height: 10),
+            ..._guide!.basicCare.map((guide) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _buildGuideItem(guide, isCheck: true),
+                )),
+            const SizedBox(height: 20),
 
-          // 주의 사항 목록
-          const Text(
-            '주의 사항 목록',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+            // 주의 사항 목록
+            const Text(
+              '주의 사항 목록',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          ..._cautions.map((caution) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _buildGuideItem(caution, isCheck: false),
-              )),
-          const SizedBox(height: 20),
+            const SizedBox(height: 10),
+            ..._guide!.mustAvoid.map((caution) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _buildGuideItem(caution, isCheck: false),
+                )),
+            const SizedBox(height: 20),
+          ],
 
           // 더 궁금한 점 카드
           GestureDetector(
@@ -349,9 +475,10 @@ class _DayChipButtonState extends State<_DayChipButton> with SingleTickerProvide
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 4,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),

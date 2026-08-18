@@ -9,7 +9,8 @@ import 'settings/settings_screen.dart';
 class MainScreen extends StatefulWidget {
   final int initialTab;
   final int myCareTab;
-  const MainScreen({super.key, this.initialTab = 0, this.myCareTab = 0});
+  final String? guideCareRecordId;
+  const MainScreen({super.key, this.initialTab = 0, this.myCareTab = 0, this.guideCareRecordId});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -36,7 +37,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _screens = [
       const HomeScreen(),
       MyCareScreen(initialTab: widget.myCareTab),
-      const AiGuideScreen(),
+      AiGuideScreen(initialCareRecordId: widget.guideCareRecordId),
       const SettingsScreen(),
     ];
 
@@ -66,6 +67,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   void _onTabTapped(int index) {
+    if (index == 1 && _currentIndex != 1) {
+      // My Care 탭 클릭 시 항상 캘린더(0)로 리셋
+      _screens[1] = const MyCareScreen(initialTab: 0);
+    }
+    if (index == 2 && _currentIndex != 2) {
+      // AI 가이드 탭 클릭 시 최근 관리 가이드로 리셋
+      _screens[2] = const AiGuideScreen();
+    }
     setState(() => _currentIndex = index);
     _bounceControllers[index].forward(from: 0.0);
   }

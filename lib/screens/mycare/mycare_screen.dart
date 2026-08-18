@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
-import 'care_detail_screen.dart';
+import '../../services/mycare/mycare_service.dart';
+import '../../services/mycare/mycare_models.dart';
 
 class MyCareScreen extends StatefulWidget {
   final int initialTab;
@@ -14,17 +15,35 @@ class MyCareScreen extends StatefulWidget {
 
 class _MyCareScreenState extends State<MyCareScreen> {
   late int _selectedTab;
+  final MyCareService _service = MyCareService();
 
   @override
   void initState() {
     super.initState();
     _selectedTab = widget.initialTab;
+    _loadCalendar();
+    _loadDayRecords();
+    if (widget.initialTab == 1) {
+      _loadHistory();
+    } else if (widget.initialTab == 2) {
+      _loadMemberships();
+    }
   }
+
+  // ─── 캘린더 탭 상태 ───
   int _currentYear = DateTime.now().year;
   int _currentMonth = DateTime.now().month;
   int? _selectedDay = DateTime.now().day;
 
-  // 이력 탭 필터
+  Map<int, int> _calendarMarkers = {}; // day → count
+  bool _calendarLoading = false;
+  String? _calendarError;
+
+  List<CareRecordItem> _dayRecords = [];
+  bool _dayRecordsLoading = false;
+  String? _dayRecordsError;
+
+  // ─── 이력 탭 상태 ───
   String _historyFilter = '전체';
   final List<String> _filters = ['전체', '엠레드', '더나', '윔'];
   final Map<String, Color> _filterColors = {
@@ -32,6 +51,189 @@ class _MyCareScreenState extends State<MyCareScreen> {
     '더나': AppColors.derna,
     '윔': AppColors.wim,
   };
+
+  List<CareRecordItem> _historyItems = [];
+  bool _historyLoading = false;
+  String? _historyError;
+
+  // ─── 이용권 탭 상태 ───
+  List<MembershipItem> _memberships = [];
+  bool _membershipsLoading = false;
+  String? _membershipsError;
+
+  // ─── 브랜드 → 색상 매핑 ───
+  Color _brandColor(String? brand) {
+    if (brand == null) return AppColors.whsBlack;
+    final b = brand.toUpperCase();
+    if (b.contains('AMRED') || brand.contains('엠레드')) return AppColors.amred;
+    if (b.contains('DERNA') || brand.contains('더나')) return AppColors.derna;
+    if (b.contains('WIM') || brand.contains('윔')) return AppColors.wim;
+    return AppColors.whsBlack;
+  }
+
+  String _brandLabel(String? brand) {
+    if (brand == null || brand.isEmpty) return '';
+    final b = brand.toUpperCase();
+    if (b.contains('AMRED')) return '엠레드';
+    if (b.contains('DERNA')) return '더나';
+    if (b.contains('WIM')) return '윔';
+    return brand;
+  }
+
+  String? _filterToBrand(String filter) {
+    switch (filter) {
+      case '엠레드':
+        return 'AMRED CLINIC';
+      case '더나':
+        return 'DERNA CLINIC';
+      case '윔':
+        return 'WIM CLINIC';
+      default:
+        return null;
+    }
+  }
+
+  // ─── API 호출 ───
+  String get _monthString =>
+      '$_currentYear-${_currentMonth.toString().padLeft(2, '0')}';
+
+  Future<void> _loadCalendar() async {
+    setState(() {
+      _calendarLoading = true;
+      _calendarError = null;
+    });
+    try {
+      final calendar = await _service.getCalendar(_monthString);
+      final markers = <int, int>{};
+      for (final d in calendar.dates) {
+        // date format: "YYYY-MM-DD"
+        final day = int.tryParse(d.date.split('-').last);
+        if (day != null) markers[day] = d.count;
+      }
+      if (mounted) {
+        setState(() {
+          _calendarMarkers = markers;
+          _calendarLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _calendarError = '캘린더를 불러올 수 없습니다';
+          _calendarLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadDayRecords() async {
+    if (_selectedDay == null) {
+      setState(() => _dayRecords = []);
+      return;
+    }
+    final dateStr =
+        '$_currentYear-${_currentMonth.toString().padLeft(2, '0')}-${_selectedDay.toString().padLeft(2, '0')}';
+    setState(() {
+      _dayRecordsLoading = true;
+      _dayRecordsError = null;
+    });
+    try {
+      final result = await _service.getCareRecords(
+        dateFrom: dateStr,
+        dateTo: dateStr,
+      );
+      if (mounted) {
+        setState(() {
+          _dayRecords = result.items;
+          _dayRecordsLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _dayRecordsError = '관리 내역을 불러올 수 없습니다';
+          _dayRecordsLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() {
+      _historyLoading = true;
+      _historyError = null;
+    });
+    try {
+      final brand = _historyFilter == '전체' ? null : _filterToBrand(_historyFilter);
+      final result = await _service.getCareRecords(brand: brand);
+      if (mounted) {
+        setState(() {
+          _historyItems = result.items;
+          _historyLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _historyError = '이력을 불러올 수 없습니다';
+          _historyLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadMemberships() async {
+    setState(() {
+      _membershipsLoading = true;
+      _membershipsError = null;
+    });
+    try {
+      final items = await _service.getMemberships();
+      if (mounted) {
+        setState(() {
+          _memberships = items;
+          _membershipsLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _membershipsError = '이용권을 불러올 수 없습니다';
+          _membershipsLoading = false;
+        });
+      }
+    }
+  }
+
+  void _onTabChanged(int tab) {
+    setState(() => _selectedTab = tab);
+    if (tab == 1 && _historyItems.isEmpty && !_historyLoading) {
+      _loadHistory();
+    } else if (tab == 2 && _memberships.isEmpty && !_membershipsLoading) {
+      _loadMemberships();
+    }
+  }
+
+  void _onMonthChanged(int delta) {
+    setState(() {
+      _currentMonth += delta;
+      if (_currentMonth < 1) {
+        _currentMonth = 12;
+        _currentYear--;
+      } else if (_currentMonth > 12) {
+        _currentMonth = 1;
+        _currentYear++;
+      }
+      _selectedDay = null;
+      _dayRecords = [];
+    });
+    _loadCalendar();
+  }
+
+  void _onDaySelected(int day) {
+    setState(() => _selectedDay = day);
+    _loadDayRecords();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +328,7 @@ class _MyCareScreenState extends State<MyCareScreen> {
                   final selected = _selectedTab == i;
                   return Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _selectedTab = i),
+                      onTap: () => _onTabChanged(i),
                       behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -134,9 +336,12 @@ class _MyCareScreenState extends State<MyCareScreen> {
                           child: Text(
                             tabs[i],
                             style: TextStyle(
-                              color: selected ? AppColors.whsBlack : AppColors.textSecondary,
+                              color: selected
+                                  ? AppColors.whsBlack
+                                  : AppColors.textSecondary,
                               fontSize: 14,
-                              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight:
+                                  selected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -152,6 +357,7 @@ class _MyCareScreenState extends State<MyCareScreen> {
     );
   }
 
+  // ─── 캘린더 탭 ───
   Widget _buildCalendarTab() {
     return Column(
       children: [
@@ -164,15 +370,7 @@ class _MyCareScreenState extends State<MyCareScreen> {
               Row(
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _currentMonth--;
-                        if (_currentMonth < 1) {
-                          _currentMonth = 12;
-                          _currentYear--;
-                        }
-                      });
-                    },
+                    onTap: () => _onMonthChanged(-1),
                     child: const SizedBox(
                       width: 32,
                       height: 32,
@@ -192,15 +390,7 @@ class _MyCareScreenState extends State<MyCareScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _currentMonth++;
-                        if (_currentMonth > 12) {
-                          _currentMonth = 1;
-                          _currentYear++;
-                        }
-                      });
-                    },
+                    onTap: () => _onMonthChanged(1),
                     child: const SizedBox(
                       width: 32,
                       height: 32,
@@ -232,7 +422,33 @@ class _MyCareScreenState extends State<MyCareScreen> {
               ),
 
               // 날짜 그리드
-              _buildCalendarGrid(),
+              if (_calendarLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              else if (_calendarError != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Text(_calendarError!,
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 13)),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: _loadCalendar,
+                          child: const Text('다시 시도',
+                              style: TextStyle(
+                                  color: AppColors.calendarAccent, fontSize: 13)),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                _buildCalendarGrid(),
             ],
           ),
         ),
@@ -252,50 +468,77 @@ class _MyCareScreenState extends State<MyCareScreen> {
         const SizedBox(height: 20),
 
         // 관리 내역
-        Builder(
-          builder: (context) {
-            final records = _getCareRecords(_selectedDay);
-            if (records.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 60),
-                child: Center(
-                  child: Text(
-                    '관리한 내역이 없어요',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                  ),
-                ),
-              );
-            }
-            return WhiteCard(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      SvgPicture.asset('assets/svg/ic_calendar_add.svg', width: 15, height: 15),
-                      const SizedBox(width: 8),
-                      Text(
-                        '$_currentMonth월 ${_selectedDay ?? '--'}일 관리 내역',
-                        style: const TextStyle(
-                          color: AppColors.whsBlack,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  ...records.map((r) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildCareHistoryItem(r.name, r.brand, r.session, r.color),
-                      )),
-                ],
-              ),
-            );
-          },
-        ),
+        _buildDayRecordsSection(),
       ],
+    );
+  }
+
+  Widget _buildDayRecordsSection() {
+    if (_dayRecordsLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 60),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+    if (_dayRecordsError != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 60),
+        child: Center(
+          child: Column(
+            children: [
+              Text(_dayRecordsError!,
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 14)),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _loadDayRecords,
+                child: const Text('다시 시도',
+                    style:
+                        TextStyle(color: AppColors.calendarAccent, fontSize: 13)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_selectedDay == null || _dayRecords.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 60),
+        child: Center(
+          child: Text(
+            '관리한 내역이 없어요',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
+        ),
+      );
+    }
+    return WhiteCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SvgPicture.asset('assets/svg/ic_calendar_add.svg',
+                  width: 15, height: 15),
+              const SizedBox(width: 8),
+              Text(
+                '$_currentMonth월 ${_selectedDay ?? '--'}일 관리 내역',
+                style: const TextStyle(
+                  color: AppColors.whsBlack,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ..._dayRecords.map((r) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildCareHistoryItem(r),
+              )),
+        ],
+      ),
     );
   }
 
@@ -303,14 +546,6 @@ class _MyCareScreenState extends State<MyCareScreen> {
     final firstDayOfMonth = DateTime(_currentYear, _currentMonth, 1);
     final daysInMonth = DateTime(_currentYear, _currentMonth + 1, 0).day;
     final startWeekday = firstDayOfMonth.weekday % 7; // 0=Sun
-
-    // 관리 있는 날 (더미 데이터) - 복수 사업장 지원
-    final careOnDays = <int, List<Color>>{
-      5: [AppColors.amred],
-      12: [AppColors.derna, AppColors.amred],
-      19: [AppColors.wim],
-      26: [AppColors.amred, AppColors.derna],
-    };
 
     List<Widget> rows = [];
     int day = 1;
@@ -327,11 +562,11 @@ class _MyCareScreenState extends State<MyCareScreen> {
           final isToday = currentDay == DateTime.now().day &&
               _currentMonth == DateTime.now().month &&
               _currentYear == DateTime.now().year;
-          final careColors = careOnDays[currentDay];
+          final hasMarker = _calendarMarkers.containsKey(currentDay);
 
           cells.add(Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _selectedDay = currentDay),
+              onTap: () => _onDaySelected(currentDay),
               child: Container(
                 height: 44,
                 alignment: Alignment.center,
@@ -353,21 +588,24 @@ class _MyCareScreenState extends State<MyCareScreen> {
                       child: Text(
                         '$currentDay',
                         style: TextStyle(
-                          color: isSelected ? AppColors.white : AppColors.whsBlack,
+                          color:
+                              isSelected ? AppColors.white : AppColors.whsBlack,
                           fontSize: 14,
-                          fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isToday || isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     ),
-                    if (careColors != null)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: careColors.map((c) => Container(
-                              margin: const EdgeInsets.only(top: 2, left: 1, right: 1),
-                              width: 4,
-                              height: 4,
-                              decoration: BoxDecoration(color: c, shape: BoxShape.circle),
-                            )).toList(),
+                    if (hasMarker)
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        width: 4,
+                        height: 4,
+                        decoration: const BoxDecoration(
+                          color: AppColors.calendarAccent,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                   ],
                 ),
@@ -391,24 +629,21 @@ class _MyCareScreenState extends State<MyCareScreen> {
       children: [
         ColorDot(color: color),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+        Text(label,
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
       ],
     );
   }
 
-  Widget _buildCareHistoryItem(String name, String brand, String session, Color color) {
+  Widget _buildCareHistoryItem(CareRecordItem record) {
+    final color = _brandColor(record.brand);
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (_) => CareDetailScreen(
-              name: name,
-              brand: brand,
-              color: color,
-              session: session,
-            ),
-          ),
+          '/care-detail',
+          arguments: record.careRecordId,
         );
       },
       child: Container(
@@ -425,53 +660,28 @@ class _MyCareScreenState extends State<MyCareScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(color: AppColors.whsBlack, fontSize: 14, fontWeight: FontWeight.w600)),
+                  Text(record.careName,
+                      style: const TextStyle(
+                          color: AppColors.whsBlack,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Text(brand, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  Text(_brandLabel(record.brand),
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12)),
                 ],
               ),
             ),
-            const Text('>', style: TextStyle(color: AppColors.textSecondary, fontSize: 18)),
+            const Text('>',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 18)),
           ],
         ),
       ),
     );
   }
 
-  // 더미 데이터: 날짜별 관리 기록
-  List<_CareRecord> _getCareRecords(int? day) {
-    if (day == null) return [];
-    // 더미: 특정 날짜에만 기록 있음
-    final records = <int, List<_CareRecord>>{
-      5: [_CareRecord('울쎄라 리프팅', '엠레드', '1회차', AppColors.amred)],
-      12: [
-        _CareRecord('브라이트닝 부스터', '더나', '2회차', AppColors.derna),
-        _CareRecord('울쎄라 리프팅', '엠레드', '2회차', AppColors.amred),
-      ],
-      19: [_CareRecord('두피 스케일링', '윔', '1회차', AppColors.wim)],
-      26: [
-        _CareRecord('울쎄라 리프팅', '엠레드', '3회차', AppColors.amred),
-        _CareRecord('브라이트닝 부스터', '더나', '1회차', AppColors.derna),
-      ],
-    };
-    return records[day] ?? [];
-  }
-
-  // 더미 이력 데이터 (최신순)
-  final List<_HistoryItem> _historyItems = [
-    _HistoryItem('울쎄라 리프팅', '엠레드', 8, 12, 3, '완료', AppColors.amred),
-    _HistoryItem('두피 스케일링', '윔', 8, 5, 2, '예정', AppColors.wim),
-    _HistoryItem('울쎄라 리프팅', '엠레드', 7, 26, 1, '완료', AppColors.amred),
-    _HistoryItem('브라이트닝 부스터', '더나', 7, 20, 1, '완료', AppColors.derna),
-    _HistoryItem('수분 광채 관리', '더나', 7, 10, 2, '완료', AppColors.derna),
-    _HistoryItem('두피 스케일링', '윔', 6, 28, 1, '완료', AppColors.wim),
-  ];
-
+  // ─── 이력 탭 ───
   Widget _buildHistoryTab() {
-    var filtered = _historyFilter == '전체'
-        ? _historyItems
-        : _historyItems.where((item) => item.brand == _historyFilter).toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -484,14 +694,19 @@ class _MyCareScreenState extends State<MyCareScreen> {
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: GestureDetector(
-                  onTap: () => setState(() => _historyFilter = filter),
+                  onTap: () {
+                    setState(() => _historyFilter = filter);
+                    _loadHistory();
+                  },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: selected ? AppColors.whsBlack : AppColors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: selected ? AppColors.whsBlack : AppColors.cardBorder,
+                        color:
+                            selected ? AppColors.whsBlack : AppColors.cardBorder,
                       ),
                     ),
                     child: Row(
@@ -511,7 +726,8 @@ class _MyCareScreenState extends State<MyCareScreen> {
                         Text(
                           filter,
                           style: TextStyle(
-                            color: selected ? AppColors.white : AppColors.whsBlack,
+                            color:
+                                selected ? AppColors.white : AppColors.whsBlack,
                             fontSize: 14,
                           ),
                         ),
@@ -526,15 +742,42 @@ class _MyCareScreenState extends State<MyCareScreen> {
         const SizedBox(height: 16),
 
         // 이력 카드들
-        if (filtered.isEmpty)
+        if (_historyLoading)
+          const Padding(
+            padding: EdgeInsets.only(top: 60),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (_historyError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 60),
+            child: Center(
+              child: Column(
+                children: [
+                  Text(_historyError!,
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: _loadHistory,
+                    child: const Text('다시 시도',
+                        style: TextStyle(
+                            color: AppColors.calendarAccent, fontSize: 13)),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (_historyItems.isEmpty)
           const Padding(
             padding: EdgeInsets.only(top: 60),
             child: Center(
-              child: Text('관리한 내역이 없어요', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+              child: Text('관리한 내역이 없어요',
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 14)),
             ),
           )
         else
-          ...filtered.map((item) => Padding(
+          ..._historyItems.map((item) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: _buildHistoryCard(item),
               )),
@@ -542,97 +785,180 @@ class _MyCareScreenState extends State<MyCareScreen> {
     );
   }
 
-  Widget _buildHistoryCard(_HistoryItem item) {
-    return WhiteCard(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 사업장 표시
-                Row(
-                  children: [
-                    ColorDot(color: item.color, size: 8),
-                    const SizedBox(width: 6),
-                    Text(
-                      item.brand,
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // 관리명
-                Text(
-                  item.name,
-                  style: const TextStyle(color: AppColors.whsBlack, fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 4),
-                // 날짜 · 회차
-                Text(
-                  '${item.month}월 ${item.day}일 · ${item.session}회차',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: item.status == '완료'
-                  ? AppColors.calendarAccent.withValues(alpha: 0.1)
-                  : AppColors.derna.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              item.status,
-              style: TextStyle(
-                color: item.status == '완료' ? AppColors.calendarAccent : AppColors.whsBlack,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+  Widget _buildHistoryCard(CareRecordItem item) {
+    final color = _brandColor(item.brand);
+    // Parse date from careDate (format: "YYYY-MM-DD")
+    final dateParts = item.careDate.split('-');
+    final month = int.tryParse(dateParts.length > 1 ? dateParts[1] : '0') ?? 0;
+    final day = int.tryParse(dateParts.length > 2 ? dateParts[2] : '0') ?? 0;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/care-detail',
+          arguments: item.careRecordId,
+        );
+      },
+      child: WhiteCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 사업장 표시
+                  Row(
+                    children: [
+                      ColorDot(color: color, size: 8),
+                      const SizedBox(width: 6),
+                      Text(
+                        _brandLabel(item.brand),
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // 관리명
+                  Text(
+                    item.careName,
+                    style: const TextStyle(
+                        color: AppColors.whsBlack,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  // 날짜
+                  Text(
+                    '$month월 $day일',
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 13),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: item.status == 'completed' || item.status == '완료'
+                    ? AppColors.calendarAccent.withValues(alpha: 0.1)
+                    : AppColors.derna.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _statusLabel(item.status),
+                style: TextStyle(
+                  color: item.status == 'completed' || item.status == '완료'
+                      ? AppColors.calendarAccent
+                      : AppColors.whsBlack,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'completed':
+        return '완료';
+      case 'scheduled':
+        return '예정';
+      case 'cancelled':
+        return '취소';
+      default:
+        return status;
+    }
+  }
+
+  // ─── 이용권 탭 ───
   Widget _buildVoucherTab() {
+    if (_membershipsLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 60),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+    if (_membershipsError != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 60),
+        child: Center(
+          child: Column(
+            children: [
+              Text(_membershipsError!,
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 14)),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _loadMemberships,
+                child: const Text('다시 시도',
+                    style: TextStyle(
+                        color: AppColors.calendarAccent, fontSize: 13)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_memberships.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 60),
+        child: Center(
+          child: Text('이용권이 없어요',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+        ),
+      );
+    }
+
     return Column(
-      children: [
-        _VoucherExpandCard(
-          name: '엠레드 울쎄라 3회권',
-          brand: '엠레드',
-          remaining: 1,
-          total: 3,
-          color: AppColors.amred,
-          expiry: '2026.12.24',
-          sessions: ['2026.01.01(월)', '2026.03.01(월)'],
-        ),
-        const SizedBox(height: 12),
-        _VoucherExpandCard(
-          name: '더나 브라이트닝 5회권',
-          brand: '더나',
-          remaining: 2,
-          total: 5,
-          color: AppColors.derna,
-          expiry: '2026.12.24',
-          sessions: ['2026.02.10(월)', '2026.04.15(화)', '2026.06.20(금)'],
-        ),
-        const SizedBox(height: 12),
-        _VoucherExpandCard(
-          name: '윔 두피 스케일링 4회권',
-          brand: '윔',
-          remaining: 2,
-          total: 4,
-          color: AppColors.wim,
-          expiry: '2026.12.24',
-          sessions: ['2026.01.15(수)', '2026.05.10(토)'],
-        ),
-      ],
+      children: _memberships.asMap().entries.map((entry) {
+        final index = entry.key;
+        final item = entry.value;
+        final color = _brandColor(item.brand);
+        final brandLabel = _brandLabel(item.brand);
+        // Format expiry date
+        final expiry = item.expiresAt != null
+            ? item.expiresAt!.substring(0, 10).replaceAll('-', '.')
+            : '-';
+        // Format usage history dates
+        final sessions = item.usageHistory
+            .map((u) => _formatUsageDate(u.usedAt))
+            .toList();
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: index < _memberships.length - 1 ? 12 : 0),
+          child: _VoucherExpandCard(
+            name: brandLabel.isNotEmpty
+                ? '$brandLabel ${item.productName} ${item.totalCount}회권'
+                : '${item.productName} ${item.totalCount}회권',
+            brand: brandLabel.isNotEmpty ? brandLabel : item.productName,
+            remaining: item.remainingCount,
+            total: item.totalCount,
+            color: color,
+            expiry: expiry,
+            sessions: sessions,
+          ),
+        );
+      }).toList(),
     );
+  }
+
+  String _formatUsageDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+      final weekday = weekdays[date.weekday - 1];
+      return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}($weekday)';
+    } catch (_) {
+      return dateStr;
+    }
   }
 }
 
@@ -666,7 +992,7 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
   @override
   Widget build(BuildContext context) {
     final used = widget.total - widget.remaining;
-    final percent = ((used / widget.total) * 100).round();
+    final percent = widget.total > 0 ? ((used / widget.total) * 100).round() : 0;
 
     return GestureDetector(
       onTap: () => setState(() {
@@ -675,7 +1001,8 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
       }),
       child: AnimatedCrossFade(
         duration: const Duration(milliseconds: 300),
-        crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+        crossFadeState:
+            _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
         firstChild: _buildCollapsed(used),
         secondChild: KeyedSubtree(
           key: ValueKey(_expandCount),
@@ -698,7 +1025,10 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
               Expanded(
                 child: Text(
                   widget.name,
-                  style: const TextStyle(color: AppColors.whsBlack, fontSize: 15, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      color: AppColors.whsBlack,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
               RichText(
@@ -706,11 +1036,15 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
                   children: [
                     TextSpan(
                       text: '${widget.remaining}',
-                      style: const TextStyle(color: AppColors.whsBlack, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: AppColors.whsBlack,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                     ),
                     const TextSpan(
                       text: ' 회 남음',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),
@@ -721,7 +1055,9 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: used / widget.total),
+              tween: Tween(
+                  begin: 0.0,
+                  end: widget.total > 0 ? used / widget.total : 0.0),
               duration: const Duration(milliseconds: 800),
               curve: Curves.easeOutCubic,
               builder: (context, value, child) {
@@ -741,15 +1077,20 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text('사용기간', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-                  Text('~ ${widget.expiry}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                  const Text('사용기간',
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 11)),
+                  Text('~ ${widget.expiry}',
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 11)),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 2),
-          Center(
-            child: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary, size: 24),
+          const Center(
+            child: Icon(Icons.keyboard_arrow_down,
+                color: AppColors.textSecondary, size: 24),
           ),
         ],
       ),
@@ -774,7 +1115,10 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
               Expanded(
                 child: Text(
                   widget.name,
-                  style: const TextStyle(color: AppColors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
               RichText(
@@ -782,7 +1126,10 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
                   children: [
                     TextSpan(
                       text: '${widget.remaining}',
-                      style: const TextStyle(color: AppColors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
                     ),
                     const TextSpan(
                       text: ' 회 남음',
@@ -806,7 +1153,9 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
                   width: 140,
                   height: 140,
                   child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: used / widget.total),
+                    tween: Tween(
+                        begin: 0.0,
+                        end: widget.total > 0 ? used / widget.total : 0.0),
                     duration: const Duration(milliseconds: 1000),
                     curve: Curves.easeOutCubic,
                     builder: (context, value, child) {
@@ -814,7 +1163,8 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
                         value: value,
                         strokeWidth: 12,
                         backgroundColor: widget.color.withValues(alpha: 0.2),
-                        valueColor: AlwaysStoppedAnimation<Color>(widget.color),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(widget.color),
                         strokeCap: StrokeCap.round,
                       );
                     },
@@ -845,7 +1195,8 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
             return Container(
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFF3B3B3C),
                 borderRadius: BorderRadius.circular(10),
@@ -855,11 +1206,15 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
                 children: [
                   Text(
                     '${i + 1}회차',
-                    style: const TextStyle(color: AppColors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600),
                   ),
                   Text(
                     widget.sessions[i],
-                    style: const TextStyle(color: AppColors.white, fontSize: 14),
+                    style:
+                        const TextStyle(color: AppColors.white, fontSize: 14),
                   ),
                 ],
               ),
@@ -874,39 +1229,23 @@ class _VoucherExpandCardState extends State<_VoucherExpandCard> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text('사용기간', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                  Text('~ ${widget.expiry}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  const Text('사용기간',
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12)),
+                  Text('~ ${widget.expiry}',
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12)),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 2),
-          Center(
-            child: const Icon(Icons.keyboard_arrow_up, color: AppColors.white, size: 24),
+          const Center(
+            child: Icon(Icons.keyboard_arrow_up,
+                color: AppColors.white, size: 24),
           ),
         ],
       ),
     );
   }
-}
-
-class _CareRecord {
-  final String name;
-  final String brand;
-  final String session;
-  final Color color;
-
-  const _CareRecord(this.name, this.brand, this.session, this.color);
-}
-
-class _HistoryItem {
-  final String name;
-  final String brand;
-  final int month;
-  final int day;
-  final int session;
-  final String status;
-  final Color color;
-
-  const _HistoryItem(this.name, this.brand, this.month, this.day, this.session, this.status, this.color);
 }

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/profile/profile_service.dart';
+import '../../services/profile/profile_models.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -10,8 +14,60 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _careNotification = true;
-  bool _marketingNotification = true;
+  bool _careNotification = false;
+  bool _marketingNotification = false;
+  bool _notificationLoaded = false;
+  bool _isLoggingOut = false;
+
+  final _authService = AuthService();
+  final _profileService = ProfileService();
+  UserProfile? _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+    _loadNotificationSettings();
+  }
+
+  Future<void> _loadNotificationSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _careNotification = prefs.getBool('care_notification') ?? false;
+      _marketingNotification = prefs.getBool('marketing_notification') ?? false;
+      _notificationLoaded = true;
+    });
+  }
+
+  Future<void> _setCareNotification(bool value) async {
+    setState(() => _careNotification = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('care_notification', value);
+  }
+
+  Future<void> _setMarketingNotification(bool value) async {
+    setState(() => _marketingNotification = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('marketing_notification', value);
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await _profileService.getProfile();
+      if (!mounted) return;
+      setState(() => _profile = profile);
+    } catch (e) {
+      debugPrint('[SettingsScreen] 프로필 로드 실패: $e');
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    setState(() => _isLoggingOut = true);
+    await _authService.logout();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,24 +95,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () => Navigator.pushNamed(context, '/my-info'),
                   child: Row(
                     children: [
-                      const AvatarCircle(initial: '지', size: 48, fontSize: 16),
+                      AvatarCircle(
+                        initial: _profile?.name.isNotEmpty == true
+                            ? _profile!.name.substring(0, 1)
+                            : '',
+                        size: 48,
+                        fontSize: 16,
+                      ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '지수님',
+                              _profile != null ? '${_profile!.name}님' : '불러오는 중...',
                               style: TextStyle(
-                                color: AppColors.whsBlack,
+                                color: _profile != null ? AppColors.whsBlack : AppColors.textSecondary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             Text(
-                              'jisoo@example.com',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                              _profile?.email ?? '',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                             ),
                           ],
                         ),
@@ -96,11 +158,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           Switch(
                             value: _careNotification,
-                            onChanged: (v) => setState(() => _careNotification = v),
+                            onChanged: _notificationLoaded ? (v) => _setCareNotification(v) : null,
                             activeThumbColor: AppColors.white,
                             activeTrackColor: AppColors.whsBlack,
                             inactiveThumbColor: AppColors.white,
                             inactiveTrackColor: AppColors.switchTrackOff,
+                            trackOutlineColor: WidgetStatePropertyAll(Colors.transparent),
                           ),
                         ],
                       ),
@@ -130,11 +193,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           Switch(
                             value: _marketingNotification,
-                            onChanged: (v) => setState(() => _marketingNotification = v),
+                            onChanged: _notificationLoaded ? (v) => _setMarketingNotification(v) : null,
                             activeThumbColor: AppColors.white,
                             activeTrackColor: AppColors.whsBlack,
                             inactiveThumbColor: AppColors.white,
                             inactiveTrackColor: AppColors.switchTrackOff,
+                            trackOutlineColor: WidgetStatePropertyAll(Colors.transparent),
                           ),
                         ],
                       ),
@@ -153,18 +217,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             width: double.infinity,
             height: 60,
             child: ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
-              },
+              onPressed: _isLoggingOut ? null : _handleLogout,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.whsBlack,
                 foregroundColor: AppColors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 elevation: 0,
               ),
-              child: const Text(
-                '로그아웃',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              child: Text(
+                _isLoggingOut ? '로그아웃 중...' : '로그아웃',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ),
           ),

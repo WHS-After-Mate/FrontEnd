@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../utils/validators.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/auth/auth_models.dart';
+import '../../services/api/api_exception.dart';
+import '../../utils/toast.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,8 +18,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
   String? _emailError;
   String? _passwordError;
+
+  final _authService = AuthService();
 
   @override
   void dispose() {
@@ -30,6 +37,40 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _validatePassword(String value) {
     setState(() => _passwordError = validatePassword(value));
+  }
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    // 유효성 검사
+    final emailErr = validateEmail(email);
+    final passwordErr = validatePassword(password);
+    setState(() {
+      _emailError = emailErr;
+      _passwordError = passwordErr;
+    });
+    if (emailErr != null || passwordErr != null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _authService.login(LoginRequest(email: email, password: password));
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/main');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      String message;
+      switch (e.code) {
+        case 'INVALID_CREDENTIALS':
+          message = '이메일 또는 비밀번호가 올바르지 않습니다';
+          break;
+        default:
+          message = e.message;
+      }
+      showToast(message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -209,10 +250,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // 로그인 버튼
               BlackButton(
-                text: '로그인',
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/main');
-                },
+                text: _isLoading ? '로그인 중...' : '로그인',
+                onPressed: _isLoading ? null : _handleLogin,
               ),
 
               const Spacer(),

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
+import '../../services/aftercare/aftercare_service.dart';
+import '../../services/aftercare/aftercare_models.dart';
 
 class AiGuideDetailScreen extends StatefulWidget {
   final String careName;
   final String brand;
   final Color brandColor;
   final DateTime careDate;
+  final String? careRecordId;
 
   const AiGuideDetailScreen({
     super.key,
@@ -15,6 +18,7 @@ class AiGuideDetailScreen extends StatefulWidget {
     required this.brand,
     required this.brandColor,
     required this.careDate,
+    this.careRecordId,
   });
 
   @override
@@ -22,15 +26,21 @@ class AiGuideDetailScreen extends StatefulWidget {
 }
 
 class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
+  final _aftercareService = AftercareService();
   final List<int> _checkpoints = [1, 3, 5, 7, 14];
   late int _todayDplus;
   late int _selectedIndex;
+
+  DailyGuide? _guide;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     _todayDplus = DateTime.now().difference(widget.careDate).inDays;
     _selectedIndex = _findClosestIndex();
+    _loadGuide();
   }
 
   int _findClosestIndex() {
@@ -46,29 +56,33 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
     return '예정';
   }
 
-  // 더미 데이터 - 나중에 AI API로 교체 (관리별로 다른 내용)
-  List<String> get _careGuides {
-    return [
-      '순한 저자극 스킨케어 제품 사용을 시작해도 좋아요.',
-      '세안 시 미온수를 사용하고 부드럽게 톡톡 두드려 건조해주세요.',
-      '자외선 차단제를 꼭 발라주세요 (SPF 50 이상 권장).',
-    ];
+  Future<void> _loadGuide() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final guide = await _aftercareService.getDailyGuide(
+        careRecordId: widget.careRecordId,
+        elapsedDay: _checkpoints[_selectedIndex],
+      );
+      if (!mounted) return;
+      setState(() {
+        _guide = guide;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = '가이드를 불러올 수 없습니다';
+        _isLoading = false;
+      });
+    }
   }
 
-  List<String> get _cautions {
-    return [
-      '사우나, 찜질방 등 고온 환경은 피해주세요.',
-      '음주는 회복을 늦출 수 있으니 자제해주세요.',
-      '시술 부위를 강하게 문지르거나 자극하지 마세요.',
-    ];
-  }
-
-  String get _coreMessage {
-    if (_todayDplus <= 1) return '시술 직후예요. 시술 부위를 만지지 말고 충분히 휴식하세요.';
-    if (_todayDplus <= 3) return '초기 회복기예요. 세안 시 자극을 최소화해주세요.';
-    if (_todayDplus <= 5) return '회복기 중반이에요, 가벼운 스킨케어부터 서서히 시작해도 좋아요.';
-    if (_todayDplus <= 7) return '회복이 잘 진행되고 있어요. 보습에 신경 써주세요.';
-    return '거의 회복됐어요! 일상으로 돌아가되 자극은 피해주세요.';
+  void _onTabChanged(int index) {
+    setState(() => _selectedIndex = index);
+    _loadGuide();
   }
 
   @override
@@ -133,7 +147,7 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: GestureDetector(
-                              onTap: () => setState(() => _selectedIndex = i),
+                              onTap: () => _onTabChanged(i),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                 decoration: BoxDecoration(
@@ -171,120 +185,8 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 오늘의 핵심 케어
-                    DarkCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              SvgPicture.asset(
-                                'assets/svg/ic_ai_ask.svg',
-                                width: 22,
-                                height: 22,
-                                colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                '오늘의 핵심 케어',
-                                style: TextStyle(color: AppColors.white, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _coreMessage,
-                            style: const TextStyle(
-                              color: AppColors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-
-                    // 기본 사후관리 안내
-                    const Text(
-                      '기본 사후관리 안내',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ..._careGuides.map((guide) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _buildGuideItem(guide, isCheck: true),
-                        )),
-                    const SizedBox(height: 20),
-
-                    // 주의 사항 목록
-                    const Text(
-                      '주의 사항 목록',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ..._cautions.map((caution) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _buildGuideItem(caution, isCheck: false),
-                        )),
-                    const SizedBox(height: 20),
-
-                    // 더 궁금한 점
-                    GestureDetector(
-                      onTap: () {},
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: AppColors.whsBlack,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            SvgPicture.asset(
-                              'assets/svg/ic_question.svg',
-                              width: 32,
-                              height: 32,
-                              colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    '더 궁금한 점이 있나요?',
-                                    style: TextStyle(
-                                      color: AppColors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'AI 챗봇에게 바로 물어보세요',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Text('>', style: TextStyle(color: AppColors.white, fontSize: 18)),
-                          ],
-                        ),
-                      ),
-                    ),
+                    // Content
+                    _buildContent(),
                   ],
                 ),
               ),
@@ -292,6 +194,175 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 60),
+        child: Center(child: CircularProgressIndicator(color: AppColors.whsBlack)),
+      );
+    }
+
+    if (_error != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 60),
+        child: Center(
+          child: Column(
+            children: [
+              Text(_error!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: _loadGuide,
+                child: const Text('다시 시도', style: TextStyle(color: AppColors.whsBlack, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final guide = _guide!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 오늘의 핵심 케어
+        DarkCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SvgPicture.asset(
+                    'assets/svg/ic_ai_ask.svg',
+                    width: 22,
+                    height: 22,
+                    colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    guide.isToday ? '오늘의 핵심 케어' : 'D+${guide.daysElapsed} 케어 안내',
+                    style: const TextStyle(color: AppColors.white, fontSize: 14),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                guide.basicCare.isNotEmpty
+                    ? guide.basicCare.first
+                    : '${guide.careName} ${guide.daysElapsed}일차 케어 안내입니다.',
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+              if (!guide.isToday) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    guide.generatedBy == 'llm' ? 'AI 개인화 가이드' : '기본 가이드',
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 26),
+
+        // 기본 사후관리 안내
+        if (guide.basicCare.isNotEmpty) ...[
+          const Text(
+            '기본 사후관리 안내',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...guide.basicCare.map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildGuideItem(item, isCheck: true),
+          )),
+          const SizedBox(height: 20),
+        ],
+
+        // 주의 사항 목록
+        if (guide.mustAvoid.isNotEmpty) ...[
+          const Text(
+            '주의 사항 목록',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...guide.mustAvoid.map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildGuideItem(item, isCheck: false),
+          )),
+          const SizedBox(height: 20),
+        ],
+
+        // 더 궁금한 점
+        GestureDetector(
+          onTap: () => Navigator.pushNamed(context, '/ai-chat'),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: AppColors.whsBlack,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                SvgPicture.asset(
+                  'assets/svg/ic_question.svg',
+                  width: 32,
+                  height: 32,
+                  colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        '더 궁금한 점이 있나요?',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'AI 챗봇에게 바로 물어보세요',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Text('>', style: TextStyle(color: AppColors.white, fontSize: 18)),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

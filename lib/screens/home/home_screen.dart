@@ -3,195 +3,430 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
+import '../../services/home/home_service.dart';
+import '../../services/home/home_models.dart';
+import '../../services/mycare/mycare_service.dart';
+import '../../services/mycare/mycare_models.dart';
+import '../../services/profile/profile_service.dart';
+import '../../services/profile/profile_models.dart';
 import '../main_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _homeService = HomeService();
+  final _myCareService = MyCareService();
+  final _profileService = ProfileService();
+
+  HomeSummary? _summary;
+  List<MembershipItem> _memberships = [];
+  UserProfile? _profile;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final results = await Future.wait([
+        _homeService.getSummary(),
+        _myCareService.getMemberships(),
+        _profileService.getProfile(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _summary = results[0] as HomeSummary;
+        _memberships = results[1] as List<MembershipItem>;
+        _profile = results[2] as UserProfile;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = '데이터를 불러올 수 없습니다';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Color _getBrandColor(String? brand) {
+    if (brand == null) return AppColors.whsBlack;
+    final b = brand.toLowerCase();
+    if (b.contains('amred') || b.contains('엠레드')) return AppColors.amred;
+    if (b.contains('derna') || b.contains('더나')) return AppColors.derna;
+    if (b.contains('wim') || b.contains('윔')) return AppColors.wim;
+    return AppColors.whsBlack;
+  }
+
+  String _getBrandLabel(String? brand) {
+    if (brand == null || brand.isEmpty) return '';
+    final b = brand.toLowerCase();
+    if (b.contains('amred')) return '엠레드';
+    if (b.contains('derna')) return '더나';
+    if (b.contains('wim')) return '윔';
+    return '';
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: date/greeting + avatar
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${DateTime.now().month}월 ${DateTime.now().day}일 · 울쎄라 리프팅 5일차',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.whsBlack));
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_error!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: _loadData,
+              child: const Text('다시 시도', style: TextStyle(color: AppColors.whsBlack, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final summary = _summary!;
+    final latestCare = summary.latestCare;
+    final aftercare = summary.aftercareCard;
+    final recommendation = summary.recommendation;
+    final userName = _profile?.name ?? '';
+    final userInitial = userName.isNotEmpty ? userName[0] : '';
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      color: AppColors.whsBlack,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: date/greeting + avatar
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        latestCare != null
+                            ? '${DateTime.now().month}월 ${DateTime.now().day}일 · ${latestCare.careName} ${latestCare.daysElapsed}일차'
+                            : '${DateTime.now().month}월 ${DateTime.now().day}일',
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '안녕하세요, $userName님',
+                        style: const TextStyle(
+                          color: AppColors.whsBlack,
+                          fontSize: 23,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                AvatarCircle(initial: userInitial),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Today's care (animated gradient dark card)
+            if (latestCare != null && aftercare != null)
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MainScreen(initialTab: 2)),
+                  );
+                },
+                child: _AnimatedGradientCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          ColorDot(color: _getBrandColor(latestCare.brand)),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_getBrandLabel(latestCare.brand).isNotEmpty ? '${_getBrandLabel(latestCare.brand)} · ' : ''}오늘의 사후관리',
+                            style: const TextStyle(color: Color(0xFFB8B8BC), fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '${latestCare.careName} · ${latestCare.daysElapsed}일차 케어',
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        aftercare.elapsedRange.isNotEmpty
+                            ? '${aftercare.elapsedRange}, 오늘 지켜야 할 점을 확인해보세요'
+                            : '오늘 지켜야 할 점을 확인해보세요',
+                        style: const TextStyle(color: Color(0xFFB8B8BC), fontSize: 14),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'AI 가이드 보기 →',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (latestCare != null)
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MainScreen(initialTab: 2)),
+                  );
+                },
+                child: _AnimatedGradientCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          ColorDot(color: _getBrandColor(latestCare.brand)),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_getBrandLabel(latestCare.brand).isNotEmpty ? '${_getBrandLabel(latestCare.brand)} · ' : ''}오늘의 사후관리',
+                            style: const TextStyle(color: Color(0xFFB8B8BC), fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '${latestCare.careName} · ${latestCare.daysElapsed}일차',
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        '사후관리 가이드를 확인해보세요',
+                        style: TextStyle(color: Color(0xFFB8B8BC), fontSize: 14),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'AI 가이드 보기 →',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 14),
+
+            // Ask AI row
+            WhiteCard(
+              padding: const EdgeInsets.all(16),
+              onTap: () => Navigator.pushNamed(context, '/ai-chat'),
+              child: Row(
+                children: [
+                  const _ShimmerIcon(
+                    icon: 'assets/svg/ic_ai_ask.svg',
+                    size: 30,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'AI에게 바로 물어보기',
+                          style: TextStyle(
+                            color: AppColors.whsBlack,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          '궁금한 점을 챗봇에게 질문해보세요',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      '안녕하세요, 지수님',
-                      style: TextStyle(
-                        color: AppColors.whsBlack,
-                        fontSize: 23,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  const Text(
+                    '>',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+
+            // Next care recommendation
+            if (recommendation != null) ...[
+              const SectionTitle(text: '다음 관리 추천'),
+              GestureDetector(
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  '/ai-recommend',
+                  arguments: recommendation.recommendationId,
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFF3F0FF),
+                        Color(0xFFFFFFFF),
+                      ],
+                    ),
+                    border: Border.all(color: const Color(0xFFE8E0F8), width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 스파클 아이콘
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEDE7FF),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: SvgPicture.asset(
+                            'assets/svg/ic_sparkle.svg',
+                            width: 22,
+                            height: 22,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      // 텍스트
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              recommendation.careName,
+                              style: const TextStyle(
+                                color: AppColors.whsBlack,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              recommendation.reasons.isNotEmpty
+                                  ? recommendation.reasons.first
+                                  : '',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              '추천 상세 보기 →',
+                              style: TextStyle(
+                                color: AppColors.whsBlack,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            // Voucher status (개별 이용권 리스트)
+            if (_memberships.isNotEmpty) ...[
+              const SectionTitle(text: '이용권 현황'),
+              WhiteCard(
+                child: Column(
+                  children: [
+                    ..._memberships.asMap().entries.map((entry) {
+                      final item = entry.value;
+                      final isLast = entry.key == _memberships.length - 1;
+                      final color = _getBrandColor(item.brand);
+                      final brandLabel = _getBrandLabel(item.brand);
+                      final displayName = brandLabel.isNotEmpty
+                          ? '$brandLabel ${item.productName}'
+                          : item.productName;
+                      return Column(
+                        children: [
+                          _buildVoucherRow(
+                            displayName,
+                            item.remainingCount,
+                            item.totalCount,
+                            color,
+                          ),
+                          if (!isLast) const SizedBox(height: 18),
+                        ],
+                      );
+                    }),
+                    const SizedBox(height: 18),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const MainScreen(initialTab: 1, myCareTab: 2)),
+                          );
+                        },
+                        child: const Text(
+                          '전체 이용권 보기 >',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const AvatarCircle(initial: '지'),
             ],
-          ),
-          const SizedBox(height: 20),
-
-          // Today's care (animated gradient dark card)
-          _AnimatedGradientCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: const [
-                    ColorDot(color: AppColors.amred),
-                    SizedBox(width: 8),
-                    Text(
-                      '엠레드 · 오늘의 사후관리',
-                      style: TextStyle(color: AppColors.white, fontSize: 13),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  '울쎄라 리프팅 · 5일차 케어',
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  '회복기 중반, 오늘 지켜야 할 점을 확인해보세요',
-                  style: TextStyle(color: Color(0xFFB8B8BC), fontSize: 14),
-                ),
-                const SizedBox(height: 18),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainScreen(initialTab: 2)),
-                    );
-                  },
-                  child: const Text(
-                    'AI 가이드 보기 →',
-                    style: TextStyle(
-                      color: AppColors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Ask AI row
-          WhiteCard(
-            padding: const EdgeInsets.all(16),
-            onTap: () => Navigator.pushNamed(context, '/ai-chat'),
-            child: Row(
-              children: [
-                const _ShimmerIcon(
-                  icon: 'assets/svg/ic_ai_ask.svg',
-                  size: 30,
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'AI에게 바로 물어보기',
-                        style: TextStyle(
-                          color: AppColors.whsBlack,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        '궁금한 점을 챗봇에게 질문해보세요',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-                const Text(
-                  '>',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-                ),
-              ],
-            ),
-          ),
-
-          // Next care recommendation
-          const SectionTitle(text: '다음 관리 추천'),
-          WhiteCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '브라이트닝 부스터 케어',
-                  style: TextStyle(
-                    color: AppColors.whsBlack,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  '울쎄라 시술 후 남을 수 있는 색소침착 예방을 위해 추천드려요',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                ),
-                const SizedBox(height: 14),
-                OutlineActionButton(
-                  text: '추천 상세 보기',
-                  leading: SvgPicture.asset('assets/svg/ic_sparkle.svg', width: 18, height: 18),
-                  onPressed: () => Navigator.pushNamed(context, '/ai-recommend'),
-                ),
-              ],
-            ),
-          ),
-
-          // Voucher status
-          const SectionTitle(text: '이용권 현황'),
-          WhiteCard(
-            child: Column(
-              children: [
-                _buildVoucherRow('엠레드 울쎄라 3회권', 1, 3, AppColors.amred),
-                const SizedBox(height: 18),
-                _buildVoucherRow('더나 입술 필러', 1, 3, AppColors.derna),
-                const SizedBox(height: 18),
-                _buildVoucherRow('윔 지방분해 3회권', 2, 3, AppColors.wim),
-                const SizedBox(height: 18),
-                Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const MainScreen(initialTab: 1, myCareTab: 2)),
-                      );
-                    },
-                    child: const Text(
-                      '전체 이용권 보기 >',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

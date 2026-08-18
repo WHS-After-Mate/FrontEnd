@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 기본적으로 https만 허용 -->
+    <base-config cleartextTrafficPermitted="false" />
+
+    <!-- 배포 서버 IP는 http(cleartext) 허용 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">1.201.116.115</domain>
+    </domain-config>
+</network-security-config>

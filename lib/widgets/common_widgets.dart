@@ -330,6 +330,7 @@ class AppTextField extends StatelessWidget {
   final String? label;
   final String? hint;
   final bool obscureText;
+  final bool enabled;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
   final Widget? suffixIcon;
@@ -343,6 +344,7 @@ class AppTextField extends StatelessWidget {
     this.label,
     this.hint,
     this.obscureText = false,
+    this.enabled = true,
     this.controller,
     this.keyboardType,
     this.suffixIcon,
@@ -386,6 +388,7 @@ class AppTextField extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   obscureText: obscureText,
+                  enabled: enabled,
                   keyboardType: keyboardType,
                   maxLength: maxLength,
                   inputFormatters: inputFormatters,

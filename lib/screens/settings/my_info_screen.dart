@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../utils/validators.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/auth/auth_models.dart';
+import '../../services/profile/profile_service.dart';
+import '../../services/profile/profile_models.dart';
+import '../../services/api/api_exception.dart';
+import '../../utils/toast.dart';
+import '../main_screen.dart';
 
 class MyInfoScreen extends StatefulWidget {
   const MyInfoScreen({super.key});
@@ -12,6 +18,13 @@ class MyInfoScreen extends StatefulWidget {
 }
 
 class _MyInfoScreenState extends State<MyInfoScreen> {
+  final _profileService = ProfileService();
+  final _authService = AuthService();
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String? _error;
+
   bool _obscurePrev = true;
   bool _obscureNew = true;
 
@@ -20,21 +33,23 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
   String? _prevPasswordError;
   String? _newPasswordError;
 
-  final _nameController = TextEditingController(text: '지수');
-  final _birthController = TextEditingController(text: '2000-01-04');
-  final _emailController = TextEditingController(text: 'abc@gmail.com');
-  final _phoneController = TextEditingController(text: '010-1111-2222');
-
-  String? _emailError;
-  String? _phoneError;
-  String? _birthError;
+  final _nameController = TextEditingController();
+  final _birthController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   final List<String> _interestOptions = [
     '리프팅·탄력', '모공·피지 관리', '보습·장벽 강화',
     '색소침착 개선', '얼굴 윤곽·볼륨', '제모', '두피 관리',
     '바디라인·체형 관리', '붓기 케어', '컨디션·대사 관리',
   ];
-  final Set<String> _selectedInterests = {'리프팅·탄력', '모공·피지 관리'};
+  final Set<String> _selectedInterests = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
 
   @override
   void dispose() {
@@ -47,35 +62,181 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
     super.dispose();
   }
 
+  Future<void> _loadProfile() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final profile = await _profileService.getProfile();
+      if (!mounted) return;
+      setState(() {
+        _nameController.text = profile.name;
+        _birthController.text = profile.birthDate ?? '';
+        _emailController.text = profile.email;
+        _phoneController.text = _formatPhone(profile.phone ?? '');
+        _selectedInterests.clear();
+        _selectedInterests.addAll(profile.interestGoals);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = '프로필을 불러올 수 없습니다';
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatPhone(String phone) {
+    // 01011112222 → 010-1111-2222
+    final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
+    if (digits.length == 11) {
+      return '${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}';
+    }
+    return phone;
+  }
+
+  Future<void> _handleSave() async {
+    setState(() => _isSaving = true);
+
+    try {
+      // 관심 목표 수정
+      await _profileService.updateInterests(
+        InterestsUpdateRequest(goals: _selectedInterests.toList()),
+      );
+
+      // 비밀번호 변경 (입력된 경우만)
+      final prevPw = _prevPasswordController.text;
+      final newPw = _newPasswordController.text;
+
+      if (prevPw.isNotEmpty || newPw.isNotEmpty) {
+        // 이전 비밀번호 유효성 검사
+        final prevPwErr = validatePassword(prevPw);
+        if (prevPwErr != null) {
+          setState(() {
+            _prevPasswordError = prevPwErr;
+            _isSaving = false;
+          });
+          return;
+        }
+
+        // 새 비밀번호 유효성 검사
+        final newPwErr = validatePassword(newPw);
+        if (newPwErr != null) {
+          setState(() {
+            _newPasswordError = newPwErr;
+            _isSaving = false;
+          });
+          return;
+        }
+
+        // 이전과 새 비밀번호가 같으면 안 됨
+        if (prevPw == newPw) {
+          setState(() {
+            _newPasswordError = '이전 비밀번호와 다른 비밀번호를 입력해주세요';
+            _isSaving = false;
+          });
+          return;
+        }
+
+        try {
+          await _profileService.changePassword(PasswordChangeRequest(
+            currentPassword: prevPw,
+            newPassword: newPw,
+          ));
+          // 비밀번호 변경 시 Supabase가 기존 세션을 무효화하므로
+          // 새 비밀번호로 재로그인하여 토큰을 갱신한다
+          await _authService.login(LoginRequest(
+            email: _emailController.text,
+            password: newPw,
+          ));
+          _prevPasswordController.clear();
+          _newPasswordController.clear();
+          setState(() {
+            _prevPasswordError = null;
+            _newPasswordError = null;
+          });
+        } on ApiException catch (e) {
+          if (e.code == 'INVALID_CURRENT_PASSWORD') {
+            setState(() => _prevPasswordError = '현재 비밀번호가 올바르지 않습니다');
+            setState(() => _isSaving = false);
+            return;
+          }
+          rethrow;
+        }
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      showToast('저장되었습니다');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      showToast(e.message);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: const Center(child: CircularProgressIndicator(color: AppColors.whsBlack)),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_error!, style: const TextStyle(color: AppColors.textSecondary)),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: _loadProfile,
+                child: const Text('다시 시도', style: TextStyle(color: AppColors.whsBlack, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Header (실선 제거)
-            Container(
-              color: AppColors.background,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Row(
+            Positioned.fill(
+              bottom: 72,
+              child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back_ios_new, size: 22, color: AppColors.whsBlack),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '내 정보',
-                    style: TextStyle(
-                      color: AppColors.whsBlack,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  // Header
+                  Container(
+                    color: AppColors.background,
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Icon(Icons.arrow_back_ios_new, size: 22, color: AppColors.whsBlack),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          '내 정보',
+                          style: TextStyle(
+                            color: AppColors.whsBlack,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
 
             // Content
             Expanded(
@@ -86,12 +247,16 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
                   children: [
                     // Avatar + name
                     Row(
-                      children: const [
-                        AvatarCircle(initial: '지', size: 56, fontSize: 18),
-                        SizedBox(width: 12),
+                      children: [
+                        AvatarCircle(
+                          initial: _nameController.text.isNotEmpty ? _nameController.text[0] : '',
+                          size: 56,
+                          fontSize: 18,
+                        ),
+                        const SizedBox(width: 12),
                         Text(
-                          '지수님',
-                          style: TextStyle(
+                          '${_nameController.text}님',
+                          style: const TextStyle(
                             color: AppColors.whsBlack,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -106,55 +271,13 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
                     WhiteCard(
                       child: Column(
                         children: [
-                          _buildEditableRow('이름', _nameController, null, null, null),
+                          _buildReadOnlyRow('이름', _nameController.text),
                           const Divider(height: 28, color: AppColors.divider),
-                          _buildEditableRow(
-                            '생년월일',
-                            _birthController,
-                            TextInputType.number,
-                            [BirthDateFormatter()],
-                            (v) => setState(() => _birthError = validateBirth(v)),
-                          ),
-                          if (_birthError != null && _birthError!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(_birthError!, style: const TextStyle(color: Colors.red, fontSize: 11)),
-                              ),
-                            ),
+                          _buildReadOnlyRow('생년월일', _birthController.text),
                           const Divider(height: 28, color: AppColors.divider),
-                          _buildEditableRow(
-                            '이메일',
-                            _emailController,
-                            TextInputType.emailAddress,
-                            null,
-                            (v) => setState(() => _emailError = validateEmail(v)),
-                          ),
-                          if (_emailError != null && _emailError!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(_emailError!, style: const TextStyle(color: Colors.red, fontSize: 11)),
-                              ),
-                            ),
+                          _buildReadOnlyRow('이메일', _emailController.text),
                           const Divider(height: 28, color: AppColors.divider),
-                          _buildEditableRow(
-                            '휴대폰 번호',
-                            _phoneController,
-                            TextInputType.phone,
-                            [PhoneNumberFormatter()],
-                            (v) => setState(() => _phoneError = validatePhone(v)),
-                          ),
-                          if (_phoneError != null && _phoneError!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(_phoneError!, style: const TextStyle(color: Colors.red, fontSize: 11)),
-                              ),
-                            ),
+                          _buildReadOnlyRow('휴대폰 번호', _phoneController.text),
                         ],
                       ),
                     ),
@@ -294,10 +417,25 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               child: BlackButton(
-                text: '저장하기',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('저장되었습니다')),
+                text: _isSaving ? '저장 중...' : '저장하기',
+                onPressed: _isSaving ? null : _handleSave,
+              ),
+            ),
+          ],
+        ),
+      ),
+
+            // 플로팅 네비게이션 바
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: FloatingNavBar(
+                currentIndex: 3,
+                onTap: (i) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => MainScreen(initialTab: i)),
                   );
                 },
               ),
@@ -308,31 +446,14 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
     );
   }
 
-  Widget _buildEditableRow(
-    String label,
-    TextEditingController controller,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? formatters,
-    ValueChanged<String>? onChanged,
-  ) {
+  Widget _buildReadOnlyRow(String label, String value) {
     return Row(
       children: [
         Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-        const SizedBox(width: 16),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            inputFormatters: formatters,
-            onChanged: onChanged,
-            textAlign: TextAlign.end,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            style: const TextStyle(color: AppColors.whsBlack, fontSize: 15),
-          ),
+        const Spacer(),
+        Text(
+          value,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 15),
         ),
       ],
     );
