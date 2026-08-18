@@ -196,10 +196,22 @@ class _AiChatScreenState extends State<AiChatScreen> {
       _messages.add(ChatMessage(
         type: MessageType.careSelection,
         isUser: false,
-        cares: _recentCares,
+        cares: _uniqueCares,
       ));
     });
     _scrollToBottom();
+  }
+
+  /// 같은 관리명은 하나만 표시 (최근 것 우선)
+  List<CareRecordItem> get _uniqueCares {
+    final seen = <String>{};
+    final unique = <CareRecordItem>[];
+    for (final care in _recentCares) {
+      if (seen.add(care.careName)) {
+        unique.add(care);
+      }
+    }
+    return unique;
   }
 
   void _onCareSelected(CareRecordItem care) {

@@ -35,7 +35,7 @@ class LatestCare {
   final String careDate;
   final int daysElapsed;
   final List<String> partOfBody;
-  final String? brand;
+  String? brand;
 
   LatestCare({
     required this.careRecordId,

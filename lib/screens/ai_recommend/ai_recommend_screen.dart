@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -146,7 +147,7 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
 
   Widget _buildContent() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.whsBlack));
+      return const _RecommendationLoadingSkeleton();
     }
 
     if (_error != null) {
@@ -444,5 +445,113 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
     if (b.contains('DERNA')) return AppColors.derna;
     if (b.contains('WIM')) return AppColors.wim;
     return AppColors.whsBlack;
+  }
+}
+
+// ─── 로딩 스켈레톤 ───
+
+class _RecommendationLoadingSkeleton extends StatefulWidget {
+  const _RecommendationLoadingSkeleton();
+
+  @override
+  State<_RecommendationLoadingSkeleton> createState() => _RecommendationLoadingSkeletonState();
+}
+
+class _RecommendationLoadingSkeletonState extends State<_RecommendationLoadingSkeleton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _dotController;
+  int _dotCount = 0;
+  late final _timer = Stream.periodic(const Duration(milliseconds: 500));
+  late final StreamSubscription _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _dotController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+    _subscription = _timer.listen((_) {
+      if (mounted) {
+        setState(() => _dotCount = (_dotCount + 1) % 4);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _dotController.dispose();
+    _subscription.cancel();
+    super.dispose();
+  }
+
+  String get _dots => '.' * (_dotCount == 0 ? 3 : _dotCount);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 분석 중 문구
+          Text(
+            'AI가 맞춤 관리를 분석하고 있어요$_dots',
+            style: const TextStyle(
+              color: AppColors.whsBlack,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '관심 목표와 최근 관리를 바탕으로 추천해드릴게요',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 40),
+
+          // 스켈레톤 카드들
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                _buildSkeletonCard(height: 100),
+                const SizedBox(height: 12),
+                _buildSkeletonCard(height: 44),
+                const SizedBox(height: 8),
+                _buildSkeletonCard(height: 44),
+                const SizedBox(height: 8),
+                _buildSkeletonCard(height: 44),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonCard({required double height}) {
+    return AnimatedBuilder(
+      animation: _dotController,
+      builder: (context, child) {
+        final opacity = 0.4 + 0.3 * (0.5 + 0.5 * _sin(_dotController.value * 2 * 3.14159));
+        return Container(
+          width: double.infinity,
+          height: height,
+          decoration: BoxDecoration(
+            color: AppColors.todayPillBg.withValues(alpha: opacity),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        );
+      },
+    );
+  }
+
+  double _sin(double x) {
+    x = x % (2 * 3.14159);
+    if (x > 3.14159) x -= 2 * 3.14159;
+    return x - (x * x * x) / 6 + (x * x * x * x * x) / 120;
   }
 }

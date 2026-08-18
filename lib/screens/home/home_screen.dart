@@ -45,11 +45,21 @@ class _HomeScreenState extends State<HomeScreen> {
         _homeService.getSummary(),
         _myCareService.getMemberships(),
         _profileService.getProfile(),
+        _myCareService.getCareRecords(size: 1),
       ]);
       if (!mounted) return;
+      final summary = results[0] as HomeSummary;
+      // 배포 서버가 latestCare.brand를 아직 안 내려줄 수 있으므로 care-records에서 보완
+      final recentRecords = results[3] as CareRecordList;
+      if (summary.latestCare != null &&
+          (summary.latestCare!.brand == null || summary.latestCare!.brand!.isEmpty) &&
+          recentRecords.items.isNotEmpty) {
+        summary.latestCare!.brand = recentRecords.items.first.brand;
+      }
       setState(() {
-        _summary = results[0] as HomeSummary;
-        _memberships = results[1] as List<MembershipItem>;
+        _summary = summary;
+        _memberships = results[1] as List<MembershipItem>
+          ..sort((a, b) => (b.lastUsedAt ?? '').compareTo(a.lastUsedAt ?? ''));
         _profile = results[2] as UserProfile;
         _isLoading = false;
       });
@@ -77,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (b.contains('amred')) return '엠레드';
     if (b.contains('derna')) return '더나';
     if (b.contains('wim')) return '윔';
-    return '';
+    return brand;
   }
 
   @override
@@ -182,11 +192,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        aftercare.elapsedRange.isNotEmpty
-                            ? '${aftercare.elapsedRange}, 오늘 지켜야 할 점을 확인해보세요'
-                            : '오늘 지켜야 할 점을 확인해보세요',
-                        style: const TextStyle(color: Color(0xFFB8B8BC), fontSize: 14),
+                      const Text(
+                        '오늘 지켜야 할 점을 확인해보세요',
+                        style: TextStyle(color: Color(0xFFB8B8BC), fontSize: 14),
                       ),
                       const SizedBox(height: 18),
                       const Text(

@@ -35,7 +35,7 @@ class _MyCareScreenState extends State<MyCareScreen> {
   int _currentMonth = DateTime.now().month;
   int? _selectedDay = DateTime.now().day;
 
-  Map<int, int> _calendarMarkers = {}; // day → count
+  Map<int, Set<String>> _calendarMarkers = {}; // day → brand set
   bool _calendarLoading = false;
   String? _calendarError;
 
@@ -103,12 +103,26 @@ class _MyCareScreenState extends State<MyCareScreen> {
       _calendarError = null;
     });
     try {
-      final calendar = await _service.getCalendar(_monthString);
-      final markers = <int, int>{};
-      for (final d in calendar.dates) {
-        // date format: "YYYY-MM-DD"
-        final day = int.tryParse(d.date.split('-').last);
-        if (day != null) markers[day] = d.count;
+      // 해당 월의 첫째날~마지막날 관리 기록을 가져와서 브랜드별 마커 구성
+      final daysInMonth = DateTime(_currentYear, _currentMonth + 1, 0).day;
+      final dateFrom = '$_monthString-01';
+      final dateTo = '$_monthString-${daysInMonth.toString().padLeft(2, '0')}';
+      final result = await _service.getCareRecords(
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        size: 100,
+      );
+      final markers = <int, Set<String>>{};
+      for (final item in result.items) {
+        final day = int.tryParse(item.careDate.split('-').last);
+        if (day != null) {
+          markers.putIfAbsent(day, () => <String>{});
+          if (item.brand != null && item.brand!.isNotEmpty) {
+            markers[day]!.add(item.brand!);
+          } else {
+            markers[day]!.add('DEFAULT');
+          }
+        }
       }
       if (mounted) {
         setState(() {
@@ -190,6 +204,7 @@ class _MyCareScreenState extends State<MyCareScreen> {
     try {
       final items = await _service.getMemberships();
       if (mounted) {
+        items.sort((a, b) => (b.lastUsedAt ?? '').compareTo(a.lastUsedAt ?? ''));
         setState(() {
           _memberships = items;
           _membershipsLoading = false;
@@ -598,14 +613,20 @@ class _MyCareScreenState extends State<MyCareScreen> {
                       ),
                     ),
                     if (hasMarker)
-                      Container(
-                        margin: const EdgeInsets.only(top: 2),
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                          color: AppColors.calendarAccent,
-                          shape: BoxShape.circle,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: _calendarMarkers[currentDay]!
+                            .take(3)
+                            .map((brand) => Container(
+                                  margin: const EdgeInsets.only(top: 2, left: 1, right: 1),
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: _brandColor(brand == 'DEFAULT' ? null : brand),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ))
+                            .toList(),
                       ),
                   ],
                 ),

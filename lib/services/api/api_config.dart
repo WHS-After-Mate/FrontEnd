@@ -8,7 +8,7 @@ class ApiConfig {
 
   /// 요청 타임아웃 (초)
   static const int connectTimeout = 10;
-  static const int receiveTimeout = 15;
+  static const int receiveTimeout = 30;
 
   /// 토큰 저장소 키
   static const String accessTokenKey = 'access_token';
