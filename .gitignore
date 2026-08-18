@@ -25,15 +25,6 @@ android/app/release/
 ios/Pods/
 ios/.symlinks/
 
-# Claude / Kiro
-.claude/
-.kiro/
-.artifacts/
-CLAUDE.md
-CLAUDE.local.md
-.kiro.toml
-.kiro.local.toml
-
 # Secrets
 *.jks
 *.keystore
