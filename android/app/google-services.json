@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "983242728425",
+    "project_id": "whs-after-mate",
+    "storage_bucket": "whs-after-mate.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:983242728425:android:7c293f5a899d6e828de178",
+        "android_client_info": {
+          "package_name": "com.example.whs_after_mate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDf0eDyCnNpwfpI81nOLNTxpIgQ1v7Eo4g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

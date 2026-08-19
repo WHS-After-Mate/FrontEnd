@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
@@ -10,11 +11,15 @@ import 'screens/ai_recommend/ai_recommend_screen.dart';
 import 'screens/settings/my_info_screen.dart';
 import 'screens/chat/ai_chat_screen.dart';
 import 'screens/mycare/care_detail_screen.dart';
+import 'services/fcm/fcm_service.dart';
 
 /// 앱 전역 Navigator 키 — 인터셉터 등에서 로그인 화면 이동에 사용
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await FcmService().initialize();
   runApp(const WhsAfterMateApp());
 }
 

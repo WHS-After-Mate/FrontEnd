@@ -360,9 +360,9 @@ class _HomeScreenState extends State<HomeScreen> {
               WhiteCard(
                 child: Column(
                   children: [
-                    ...memberships.asMap().entries.map((entry) {
+                    ...memberships.take(3).toList().asMap().entries.map((entry) {
                       final item = entry.value;
-                      final isLast = entry.key == memberships.length - 1;
+                      final isLast = entry.key == memberships.take(3).length - 1;
                       final color = _getBrandColor(item.brand);
                       final brandLabel = _getBrandLabel(item.brand);
                       final displayName = brandLabel.isNotEmpty

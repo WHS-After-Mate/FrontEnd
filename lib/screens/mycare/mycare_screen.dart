@@ -864,17 +864,13 @@ class _MyCareScreenState extends State<MyCareScreen> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: item.status == 'completed' || item.status == '완료'
-                    ? AppColors.calendarAccent.withValues(alpha: 0.1)
-                    : AppColors.derna.withValues(alpha: 0.3),
+                color: _statusBadgeColor(_effectiveStatus(item.status, item.careDate)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                _statusLabel(item.status),
+                _statusLabel(_effectiveStatus(item.status, item.careDate)),
                 style: TextStyle(
-                  color: item.status == 'completed' || item.status == '완료'
-                      ? AppColors.calendarAccent
-                      : AppColors.whsBlack,
+                  color: _statusTextColor(_effectiveStatus(item.status, item.careDate)),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -886,16 +882,53 @@ class _MyCareScreenState extends State<MyCareScreen> {
     );
   }
 
+  /// careDate가 미래이면 'scheduled', 아니면 서버 status 그대로
+  String _effectiveStatus(String status, String careDate) {
+    try {
+      final date = DateTime.parse(careDate);
+      final today = DateTime.now();
+      final todayDate = DateTime(today.year, today.month, today.day);
+      if (date.isAfter(todayDate)) return 'scheduled';
+    } catch (_) {}
+    return status;
+  }
+
   String _statusLabel(String status) {
     switch (status) {
       case 'completed':
         return '완료';
       case 'scheduled':
-        return '예정';
+        return '예약';
       case 'cancelled':
         return '취소';
       default:
         return status;
+    }
+  }
+
+  Color _statusBadgeColor(String status) {
+    switch (status) {
+      case 'completed':
+        return AppColors.calendarAccent.withValues(alpha: 0.1);
+      case 'scheduled':
+        return const Color(0xFFFFF3E0);
+      case 'cancelled':
+        return Colors.grey.withValues(alpha: 0.1);
+      default:
+        return AppColors.derna.withValues(alpha: 0.3);
+    }
+  }
+
+  Color _statusTextColor(String status) {
+    switch (status) {
+      case 'completed':
+        return AppColors.calendarAccent;
+      case 'scheduled':
+        return const Color(0xFFE65100);
+      case 'cancelled':
+        return Colors.grey;
+      default:
+        return AppColors.whsBlack;
     }
   }
 

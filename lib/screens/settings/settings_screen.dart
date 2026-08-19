@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../services/auth/auth_service.dart';
+import '../../services/fcm/fcm_service.dart';
 import '../../services/profile/profile_service.dart';
 import '../../services/profile/profile_models.dart';
 
@@ -86,6 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _handleLogout() async {
     setState(() => _isLoggingOut = true);
+    await FcmService().unregisterToken();
     await _authService.logout();
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);

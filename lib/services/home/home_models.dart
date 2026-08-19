@@ -59,14 +59,14 @@ class LatestCare {
 /// 사후관리 카드
 class AftercareCard {
   final String guideId;
-  final String elapsedRange;
+  final String? elapsedRange;
   final List<String> cautions;
   final String? nextCheckDate;
   final String generatedAt;
 
   AftercareCard({
     required this.guideId,
-    required this.elapsedRange,
+    this.elapsedRange,
     required this.cautions,
     this.nextCheckDate,
     required this.generatedAt,
@@ -74,7 +74,7 @@ class AftercareCard {
 
   factory AftercareCard.fromJson(Map<String, dynamic> json) => AftercareCard(
     guideId: json['guideId'] as String,
-    elapsedRange: json['elapsedRange'] as String,
+    elapsedRange: json['elapsedRange'] as String?,
     cautions: List<String>.from(json['cautions'] ?? []),
     nextCheckDate: json['nextCheckDate'] as String?,
     generatedAt: json['generatedAt'] as String,

@@ -5,6 +5,7 @@ import '../../widgets/common_widgets.dart';
 import '../../services/mycare/mycare_service.dart';
 import '../../services/aftercare/aftercare_service.dart';
 import '../../services/aftercare/aftercare_models.dart';
+import '../../services/api/api_exception.dart';
 
 class AiGuideScreen extends StatefulWidget {
   final String? initialCareRecordId;
@@ -79,7 +80,10 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
   }
 
   Future<void> _loadGuide() async {
-    setState(() => _guideLoading = true);
+    setState(() {
+      _guideLoading = true;
+      _error = null;
+    });
     try {
       final selectedDay = _checkpoints[_selectedIndex];
       final guide = await _aftercareService.getDailyGuide(
@@ -93,9 +97,20 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
         _isLoading = false;
         _error = null;
       });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _guide = null;
+        _guideLoading = false;
+        _isLoading = false;
+        _error = (e.statusCode == 404 || e.code == 'GUIDE_NOT_AVAILABLE')
+            ? '해당 일차의 가이드가 아직 준비되지 않았어요'
+            : '가이드를 불러올 수 없습니다';
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
+        _guide = null;
         _guideLoading = false;
         _isLoading = false;
         _error = '가이드를 불러올 수 없습니다';
@@ -192,7 +207,7 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'AI 사후관리 가이드',
+                '사후관리 가이드',
                 style: TextStyle(
                   color: AppColors.whsBlack,
                   fontSize: 24,

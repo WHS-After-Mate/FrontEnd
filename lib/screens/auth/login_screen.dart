@@ -5,6 +5,7 @@ import '../../utils/validators.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/auth/auth_models.dart';
 import '../../services/api/api_exception.dart';
+import '../../services/fcm/fcm_service.dart';
 import '../../utils/toast.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -56,6 +57,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authService.login(LoginRequest(email: email, password: password));
       if (!mounted) return;
+      // 로그인 성공 후 FCM 토큰 서버 등록 (실패해도 진행)
+      FcmService().registerToken();
       Navigator.pushReplacementNamed(context, '/main');
     } on ApiException catch (e) {
       if (!mounted) return;

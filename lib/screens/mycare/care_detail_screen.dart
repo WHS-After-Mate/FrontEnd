@@ -28,11 +28,48 @@ String getStatusLabel(String status) {
     case 'completed':
       return '관리 완료';
     case 'scheduled':
-      return '예약됨';
+      return '예약';
     case 'cancelled':
       return '취소됨';
     default:
       return status;
+  }
+}
+
+/// careDate가 미래이면 'scheduled', 아니면 서버 status 그대로
+String getEffectiveStatus(String status, String careDate) {
+  try {
+    final date = DateTime.parse(careDate);
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    if (date.isAfter(todayDate)) return 'scheduled';
+  } catch (_) {}
+  return status;
+}
+
+Color _getStatusBadgeColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'completed':
+      return AppColors.calendarAccent.withValues(alpha: 0.1);
+    case 'scheduled':
+      return const Color(0xFFFFF3E0);
+    case 'cancelled':
+      return Colors.grey.withValues(alpha: 0.1);
+    default:
+      return AppColors.derna.withValues(alpha: 0.3);
+  }
+}
+
+Color _getStatusTextColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'completed':
+      return AppColors.calendarAccent;
+    case 'scheduled':
+      return const Color(0xFFE65100);
+    case 'cancelled':
+      return Colors.grey;
+    default:
+      return AppColors.whsBlack;
   }
 }
 
@@ -239,17 +276,13 @@ class _CareDetailScreenState extends State<CareDetailScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: detail.status == 'completed' || detail.status == '완료'
-                            ? AppColors.calendarAccent.withValues(alpha: 0.1)
-                            : AppColors.derna.withValues(alpha: 0.3),
+                        color: _getStatusBadgeColor(getEffectiveStatus(detail.status, detail.careDate)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        getStatusLabel(detail.status),
+                        getStatusLabel(getEffectiveStatus(detail.status, detail.careDate)),
                         style: TextStyle(
-                          color: detail.status == 'completed' || detail.status == '완료'
-                              ? AppColors.calendarAccent
-                              : AppColors.whsBlack,
+                          color: _getStatusTextColor(getEffectiveStatus(detail.status, detail.careDate)),
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -267,7 +300,7 @@ class _CareDetailScreenState extends State<CareDetailScreen> {
                       const Divider(height: 28, color: AppColors.divider),
                       _buildDetailRow('관리 부위', detail.partOfBody.join(', ')),
                       const Divider(height: 28, color: AppColors.divider),
-                      _buildDetailRow('경과일', '관리 후 ${detail.daysElapsed}일차'),
+                      _buildDetailRow('경과일', getEffectiveStatus(detail.status, detail.careDate) == 'scheduled' ? '-' : '관리 후 ${detail.daysElapsed}일차'),
                       const Divider(height: 28, color: AppColors.divider),
                       _buildDetailRow('관리 회차', sessionText),
                       const Divider(height: 28, color: AppColors.divider),

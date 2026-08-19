@@ -91,13 +91,24 @@ class _AiChatScreenState extends State<AiChatScreen> {
       _recentCares = cares;
 
       if (_recentCares.isNotEmpty) {
-        _selectedCare = _recentCares.first;
-        final care = _recentCares.first;
-        final daysElapsed = DateTime.now().difference(DateTime.parse(care.careDate)).inDays;
+        // 오늘 이전(완료된) 관리 중 가장 최근 것을 기준으로 사용
+        final today = DateTime.now();
+        final todayDate = DateTime(today.year, today.month, today.day);
+        final completedCares = _recentCares.where((c) {
+          try {
+            return !DateTime.parse(c.careDate).isAfter(todayDate);
+          } catch (_) {
+            return true;
+          }
+        }).toList();
+
+        final baseCare = completedCares.isNotEmpty ? completedCares.first : _recentCares.first;
+        _selectedCare = baseCare;
+        final daysElapsed = today.difference(DateTime.parse(baseCare.careDate)).inDays;
 
         _messages.add(ChatMessage(
           type: MessageType.text,
-          text: '안녕하세요${_userName.isNotEmpty ? ', $_userName님' : ''}.\n최근에 받은 ${care.careName}은 현재 관리 후 $daysElapsed일차예요.\n사후관리와 관련해 어떤 점이 궁금하신가요?',
+          text: '안녕하세요${_userName.isNotEmpty ? ', $_userName님' : ''}.\n최근에 받은 ${baseCare.careName}은 현재 관리 후 $daysElapsed일차예요.\n사후관리와 관련해 어떤 점이 궁금하신가요?',
           isUser: false,
         ));
 

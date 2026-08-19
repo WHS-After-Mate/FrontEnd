@@ -5,6 +5,7 @@ import '../../utils/validators.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/auth/auth_models.dart';
 import '../../services/api/api_exception.dart';
+import '../../services/fcm/fcm_service.dart';
 import '../../utils/toast.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -246,6 +247,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         interestGoals: _selectedInterests.toList(),
       ));
       if (!mounted) return;
+      FcmService().registerToken();
       Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
     } on ApiException catch (e) {
       if (!mounted) return;

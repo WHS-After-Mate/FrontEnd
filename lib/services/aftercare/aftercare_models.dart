@@ -4,7 +4,7 @@ class DailyGuide {
   final String careRecordId;
   final String careName;
   final int daysElapsed;
-  final String elapsedRange;
+  final String? elapsedRange;
   final bool isToday;
   final List<String> aftercare;
   final List<String> precautions;
@@ -12,14 +12,14 @@ class DailyGuide {
   final String? nextCheckDate;
   final String generatedAt;
   final String generatedBy;
-  final String cacheExpiresAt;
+  final String? cacheExpiresAt;
 
   DailyGuide({
     required this.guideId,
     required this.careRecordId,
     required this.careName,
     required this.daysElapsed,
-    required this.elapsedRange,
+    this.elapsedRange,
     required this.isToday,
     required this.aftercare,
     required this.precautions,
@@ -27,7 +27,7 @@ class DailyGuide {
     this.nextCheckDate,
     required this.generatedAt,
     required this.generatedBy,
-    required this.cacheExpiresAt,
+    this.cacheExpiresAt,
   });
 
   factory DailyGuide.fromJson(Map<String, dynamic> json) => DailyGuide(
@@ -35,15 +35,15 @@ class DailyGuide {
     careRecordId: json['careRecordId'] as String,
     careName: json['careName'] as String,
     daysElapsed: json['daysElapsed'] as int,
-    elapsedRange: json['elapsedRange'] as String,
+    elapsedRange: json['elapsedRange'] as String?,
     isToday: json['isToday'] as bool? ?? false,
     aftercare: List<String>.from(json['aftercare'] ?? json['basicCare'] ?? []),
     precautions: List<String>.from(json['precautions'] ?? json['mustAvoid'] ?? []),
     keyCare: json['keyCare'] as String?,
     nextCheckDate: json['nextCheckDate'] as String?,
     generatedAt: json['generatedAt'] as String,
-    generatedBy: json['generatedBy'] as String,
-    cacheExpiresAt: json['cacheExpiresAt'] as String,
+    generatedBy: json['generatedBy'] as String? ?? 'treatment_guide',
+    cacheExpiresAt: json['cacheExpiresAt'] as String?,
   );
 }
 

@@ -4,10 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
-import '../../services/home/home_service.dart';
 import '../../services/home/home_models.dart';
-import '../../services/profile/profile_service.dart';
-import '../../services/profile/profile_models.dart';
+import '../../services/home/recommend_cache.dart';
 import '../../utils/toast.dart';
 import '../main_screen.dart';
 
@@ -19,67 +17,56 @@ class AiRecommendScreen extends StatefulWidget {
 }
 
 class _AiRecommendScreenState extends State<AiRecommendScreen> {
-  final _homeService = HomeService();
-  final _profileService = ProfileService();
-  RecommendationDetail? _detail;
-  UserProfile? _profile;
-  bool _isLoading = true;
-  String? _error;
+  final _cache = RecommendCache();
+  String? _recommendationId;
+  bool _initialized = false;
 
   /// 추천 이유에서 관심 목표 태그를 추출
   List<String> get _matchedGoals {
-    if (_detail == null) return [];
+    final detail = _currentDetail;
+    if (detail == null) return [];
     // reasons에서 "관심 목표(X, Y)에 도움이 돼요" 패턴에서 태그 추출
-    for (final reason in _detail!.reasons) {
+    for (final reason in detail.reasons) {
       final match = RegExp(r'관심 목표\((.+?)\)').firstMatch(reason);
       if (match != null) {
         return match.group(1)!.split(', ').map((s) => s.trim()).toList();
       }
     }
     // 추출 실패 시 프로필 관심목표 표시
-    return _profile?.interestGoals ?? [];
+    return _cache.profile?.interestGoals ?? [];
+  }
+
+  RecommendationDetail? get _currentDetail {
+    if (_recommendationId != null && _recommendationId!.isNotEmpty) {
+      return _cache.getDetail(_recommendationId!) ?? _cache.latestDetail;
+    }
+    return _cache.latestDetail;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _cache.addListener(_onCacheUpdate);
+  }
+
+  @override
+  void dispose() {
+    _cache.removeListener(_onCacheUpdate);
+    super.dispose();
+  }
+
+  void _onCacheUpdate() {
+    if (mounted) setState(() {});
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_detail == null && _isLoading) {
-      _loadData();
-    }
-  }
-
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    // context를 async gap 이전에 읽어둠
-    final args = ModalRoute.of(context)?.settings.arguments;
-
-    try {
-      // 프로필 로드
-      try {
-        _profile = await _profileService.getProfile();
-      } catch (_) {}
-
-      RecommendationDetail detail;
-      if (args is String && args.isNotEmpty) {
-        detail = await _homeService.getRecommendationDetail(args);
-      } else {
-        detail = await _homeService.getRecommendation();
-      }
-      if (!mounted) return;
-      setState(() {
-        _detail = detail;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = '추천 정보를 불러올 수 없습니다';
-        _isLoading = false;
-      });
+    if (!_initialized) {
+      _initialized = true;
+      final args = ModalRoute.of(context)?.settings.arguments;
+      _recommendationId = (args is String && args.isNotEmpty) ? args : null;
+      _cache.loadIfNeeded(recommendationId: _recommendationId);
     }
   }
 
@@ -146,19 +133,19 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
   }
 
   Widget _buildContent() {
-    if (_isLoading) {
+    if (_cache.isLoading && _currentDetail == null) {
       return const _RecommendationLoadingSkeleton();
     }
 
-    if (_error != null) {
+    if (_cache.error != null && _currentDetail == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_error!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            Text(_cache.error!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: _loadData,
+              onTap: () => _cache.reload(recommendationId: _recommendationId),
               child: const Text('다시 시도', style: TextStyle(color: AppColors.whsBlack, fontWeight: FontWeight.bold)),
             ),
           ],
@@ -166,7 +153,7 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
       );
     }
 
-    final detail = _detail!;
+    final detail = _currentDetail!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
@@ -175,7 +162,7 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
         children: [
           // Heading
           Text(
-            '${_profile?.name ?? ''}님을 위한\n관리 추천',
+            '${_cache.profile?.name ?? ''}님을 위한\n관리 추천',
             style: const TextStyle(
               color: AppColors.whsBlack,
               fontSize: 24,
