@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../services/aftercare/aftercare_service.dart';
@@ -28,6 +29,7 @@ class ChatMessage {
   final List<SuggestedQuestion>? suggestions;
   final List<CareRecordItem>? cares;
   final String? consultationLevel; // NONE | RECOMMENDED | URGENT
+  final String? brand; // 답변에 연결된 관리의 brand
 
   const ChatMessage({
     required this.type,
@@ -36,6 +38,7 @@ class ChatMessage {
     this.suggestions,
     this.cares,
     this.consultationLevel,
+    this.brand,
   });
 }
 
@@ -192,7 +195,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     _sendMessage(suggestion);
   }
 
-  void _showCareSelection() {
+  Future<void> _showCareSelection() async {
     setState(() {
       _messages.add(ChatMessage(
         type: MessageType.text,
@@ -201,32 +204,82 @@ class _AiChatScreenState extends State<AiChatScreen> {
       ));
       _messages.add(const ChatMessage(
         type: MessageType.text,
-        text: '어떤 관리의 사후관리가 궁금하신가요?',
+        text: '최근 30일 내 관리 이력을 불러오고 있어요...',
         isUser: false,
-      ));
-      _messages.add(ChatMessage(
-        type: MessageType.careSelection,
-        isUser: false,
-        cares: _uniqueCares,
       ));
     });
     _scrollToBottom();
-  }
 
-  /// 같은 관리명은 하나만 표시 (최근 것 우선)
-  List<CareRecordItem> get _uniqueCares {
-    final seen = <String>{};
-    final unique = <CareRecordItem>[];
-    for (final care in _recentCares) {
-      if (seen.add(care.careName)) {
-        unique.add(care);
+    // 30일 내 관리 이력 로드
+    try {
+      final now = DateTime.now();
+      final thirtyDaysAgo = now.subtract(const Duration(days: 30));
+      final dateFrom = '${thirtyDaysAgo.year}-${thirtyDaysAgo.month.toString().padLeft(2, '0')}-${thirtyDaysAgo.day.toString().padLeft(2, '0')}';
+      final dateTo = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+      final result = await _myCareService.getCareRecords(
+        size: 20,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+      );
+      if (!mounted) return;
+
+      // 미래 예약 제외, 같은 관리명 중복 제거
+      final today = DateTime.now();
+      final todayDate = DateTime(today.year, today.month, today.day);
+      final seen = <String>{};
+      final cares = <CareRecordItem>[];
+      for (final care in result.items) {
+        try {
+          if (DateTime.parse(care.careDate).isAfter(todayDate)) continue;
+        } catch (_) {}
+        if (seen.add(care.careName)) {
+          cares.add(care);
+        }
       }
+
+      setState(() {
+        // 로딩 메시지 제거
+        _messages.removeLast();
+        if (cares.isNotEmpty) {
+          _messages.add(const ChatMessage(
+            type: MessageType.text,
+            text: '어떤 관리의 사후관리가 궁금하신가요?',
+            isUser: false,
+          ));
+          _messages.add(ChatMessage(
+            type: MessageType.careSelection,
+            isUser: false,
+            cares: cares,
+          ));
+        } else {
+          _messages.add(const ChatMessage(
+            type: MessageType.text,
+            text: '최근 30일 내 완료된 관리 이력이 없어요.',
+            isUser: false,
+          ));
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _messages.removeLast();
+        _messages.add(const ChatMessage(
+          type: MessageType.text,
+          text: '관리 이력을 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+          isUser: false,
+        ));
+      });
     }
-    return unique;
+    _scrollToBottom();
   }
 
   void _onCareSelected(CareRecordItem care) {
-    final daysElapsed = DateTime.now().difference(DateTime.parse(care.careDate)).inDays;
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final careDate = DateTime.parse(care.careDate);
+    final isScheduled = careDate.isAfter(todayDate);
+    final daysElapsed = today.difference(careDate).inDays;
     final brandName = _brandLabel(care.brand);
     final displayName = brandName.isNotEmpty ? '$brandName ${care.careName}' : care.careName;
 
@@ -240,7 +293,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
       ));
       _messages.add(ChatMessage(
         type: MessageType.text,
-        text: '$displayName은 관리 후 $daysElapsed일차예요.\n어떤 점이 궁금하신가요?',
+        text: isScheduled
+            ? '$displayName은 예약된 관리예요.\n완료된 관리에 대해 질문해주세요.'
+            : '$displayName은 관리 후 $daysElapsed일차예요.\n어떤 점이 궁금하신가요?',
         isUser: false,
       ));
       _messages.add(ChatMessage(
@@ -278,6 +333,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
             text: response.answer!,
             isUser: false,
             consultationLevel: response.consultationLevel,
+            brand: _selectedCare?.brand,
           ));
         } else if (response.status == 'out_of_scope' || response.status == 'expert_required') {
           _messages.add(ChatMessage(
@@ -285,6 +341,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
             text: response.message ?? '해당 질문은 전문가 상담이 필요합니다.\n시술받은 병원에 문의해주세요.',
             isUser: false,
             consultationLevel: response.consultationLevel,
+            brand: _selectedCare?.brand,
           ));
         }
         // 답변 후 추가 질문 유도
@@ -344,11 +401,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Stack(
           children: [
             Positioned.fill(
-              bottom: 72,
+              bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                  ? MediaQuery.of(context).viewInsets.bottom
+                  : 72,
               child: Column(
                 children: [
                   // Header
@@ -682,6 +742,21 @@ class _MessageBubbleState extends State<_MessageBubble>
     );
   }
 
+  void _openClinicKakao() {
+    final brand = widget.message.brand?.toUpperCase() ?? '';
+    String? url;
+    if (brand.contains('AMRED')) {
+      url = 'https://pf.kakao.com/_jyzAT/chat';
+    } else if (brand.contains('DERNA')) {
+      url = 'https://pf.kakao.com/_AxjDxcn/chat';
+    } else if (brand.contains('WIM')) {
+      url = 'https://pf.kakao.com/_cCxbuG/chat';
+    }
+    if (url != null) {
+      launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
+  }
+
   Widget _buildConsultationCard({
     required String message,
     required String buttonText,
@@ -711,9 +786,7 @@ class _MessageBubbleState extends State<_MessageBubble>
             ),
             const SizedBox(height: 10),
             GestureDetector(
-              onTap: () {
-                // TODO: 실제 전화/채팅 연결 기능 구현
-              },
+              onTap: () => _openClinicKakao(),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(

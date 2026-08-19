@@ -126,18 +126,18 @@ class QuestionResponse {
 class QuestionBasis {
   final String careRecordId;
   final int daysElapsed;
-  final String guideId;
+  final String? guideId;
 
   QuestionBasis({
     required this.careRecordId,
     required this.daysElapsed,
-    required this.guideId,
+    this.guideId,
   });
 
   factory QuestionBasis.fromJson(Map<String, dynamic> json) => QuestionBasis(
     careRecordId: json['careRecordId'] as String,
     daysElapsed: json['daysElapsed'] as int,
-    guideId: json['guideId'] as String,
+    guideId: json['guideId'] as String?,
   );
 }
 
