@@ -6,8 +6,9 @@ class DailyGuide {
   final int daysElapsed;
   final String elapsedRange;
   final bool isToday;
-  final List<String> mustAvoid;
-  final List<String> basicCare;
+  final List<String> aftercare;
+  final List<String> precautions;
+  final String? keyCare;
   final String? nextCheckDate;
   final String generatedAt;
   final String generatedBy;
@@ -20,8 +21,9 @@ class DailyGuide {
     required this.daysElapsed,
     required this.elapsedRange,
     required this.isToday,
-    required this.mustAvoid,
-    required this.basicCare,
+    required this.aftercare,
+    required this.precautions,
+    this.keyCare,
     this.nextCheckDate,
     required this.generatedAt,
     required this.generatedBy,
@@ -35,8 +37,9 @@ class DailyGuide {
     daysElapsed: json['daysElapsed'] as int,
     elapsedRange: json['elapsedRange'] as String,
     isToday: json['isToday'] as bool? ?? false,
-    mustAvoid: List<String>.from(json['mustAvoid'] ?? []),
-    basicCare: List<String>.from(json['basicCare'] ?? []),
+    aftercare: List<String>.from(json['aftercare'] ?? json['basicCare'] ?? []),
+    precautions: List<String>.from(json['precautions'] ?? json['mustAvoid'] ?? []),
+    keyCare: json['keyCare'] as String?,
     nextCheckDate: json['nextCheckDate'] as String?,
     generatedAt: json['generatedAt'] as String,
     generatedBy: json['generatedBy'] as String,

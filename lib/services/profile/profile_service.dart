@@ -63,6 +63,32 @@ class ProfileService {
     }
   }
 
+  /// 알림 설정 조회
+  Future<NotificationSettings> getNotificationSettings() async {
+    try {
+      debugPrint('[ProfileService] getNotificationSettings 호출');
+      final response = await _dio.get('/profile/notifications');
+      debugPrint('[ProfileService] getNotificationSettings 성공');
+      return NotificationSettings.fromJson(response.data);
+    } on DioException catch (e) {
+      debugPrint('[ProfileService] getNotificationSettings 실패: ${e.response?.statusCode}');
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// 알림 설정 변경
+  Future<NotificationSettings> updateNotificationSettings(NotificationSettingsUpdate request) async {
+    try {
+      debugPrint('[ProfileService] updateNotificationSettings: ${request.toJson()}');
+      final response = await _dio.patch('/profile/notifications', data: request.toJson());
+      debugPrint('[ProfileService] updateNotificationSettings 성공');
+      return NotificationSettings.fromJson(response.data);
+    } on DioException catch (e) {
+      debugPrint('[ProfileService] updateNotificationSettings 실패: ${e.response?.statusCode}');
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   /// FCM 토큰 등록
   Future<void> registerDeviceToken(String fcmToken, {String platform = 'android'}) async {
     try {

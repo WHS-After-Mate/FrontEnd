@@ -62,3 +62,34 @@ class InterestsUpdateRequest {
 
   Map<String, dynamic> toJson() => {'goals': goals};
 }
+
+/// GET /profile/notifications 응답
+class NotificationSettings {
+  final bool careNotification;
+  final bool marketingNotification;
+
+  NotificationSettings({
+    required this.careNotification,
+    required this.marketingNotification,
+  });
+
+  factory NotificationSettings.fromJson(Map<String, dynamic> json) => NotificationSettings(
+    careNotification: json['careNotification'] as bool? ?? true,
+    marketingNotification: json['marketingNotification'] as bool? ?? true,
+  );
+}
+
+/// PATCH /profile/notifications 요청
+class NotificationSettingsUpdate {
+  final bool? careNotification;
+  final bool? marketingNotification;
+
+  NotificationSettingsUpdate({this.careNotification, this.marketingNotification});
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    if (careNotification != null) map['careNotification'] = careNotification;
+    if (marketingNotification != null) map['marketingNotification'] = marketingNotification;
+    return map;
+  }
+}

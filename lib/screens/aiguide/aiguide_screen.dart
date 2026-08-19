@@ -68,8 +68,13 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
       } else {
         setState(() => _isLoading = false);
       }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = '관리 정보를 불러올 수 없습니다';
+        });
+      }
     }
   }
 
@@ -139,6 +144,13 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
 
   String _buildSummaryMessage() {
     if (_guide == null) return '';
+    // 서버에서 AI 생성된 keyCare가 있으면 우선 사용 (무의미한 fallback 문구는 제외)
+    if (_guide!.keyCare != null &&
+        _guide!.keyCare!.isNotEmpty &&
+        !_guide!.keyCare!.contains('확인해주세요')) {
+      return _guide!.keyCare!;
+    }
+    // 없으면 경과일 기반 기본 문구
     final day = _checkpoints[_selectedIndex];
     if (day <= 1) {
       return '시술 직후예요. 자극을 최소화하고 안정을 취해주세요.';
@@ -293,7 +305,7 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            ..._guide!.basicCare.map((guide) => Padding(
+            ..._guide!.aftercare.map((guide) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: _buildGuideItem(guide, isCheck: true),
                 )),
@@ -309,12 +321,23 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            ..._guide!.mustAvoid.map((caution) => Padding(
+            ..._guide!.precautions.map((caution) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: _buildGuideItem(caution, isCheck: false),
                 )),
             const SizedBox(height: 20),
-          ],
+          ]
+          else if (!_guideLoading && _error == null)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(
+                  '사후관리 가이드를 준비 중이에요.\n잠시 후 다시 시도해주세요.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                ),
+              ),
+            ),
 
           // 더 궁금한 점 카드
           GestureDetector(

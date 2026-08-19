@@ -16,6 +16,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _pageController = PageController();
+  final _step1ScrollController = ScrollController();
   int _currentPage = 0;
   bool _isLoading = false;
 
@@ -37,6 +38,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _phoneError;
   String? _passwordError;
   String? _confirmPasswordError;
+  String? _interestError;
 
   final _authService = AuthService();
 
@@ -50,6 +52,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _step1ScrollController.dispose();
     _patientNoController.dispose();
     _nameController.dispose();
     _birthController.dispose();
@@ -92,6 +95,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   /// 1단계 → 2단계 이동 (서버 pre-check로 환자번호+이름+생년월일+전화번호 대조)
+  void _scrollStep1ToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_step1ScrollController.hasClients) {
+        _step1ScrollController.animateTo(
+          _step1ScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   Future<void> _goToStep2() async {
     final patientNo = _patientNoController.text.trim();
     final name = _nameController.text.trim();
@@ -100,6 +115,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (patientNo.isEmpty || name.isEmpty || birth.isEmpty || phone.isEmpty) {
       setState(() => _step1Error = '모든 항목을 입력해주세요');
+      _scrollStep1ToBottom();
       return;
     }
 
@@ -149,6 +165,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           message = e.message;
       }
       setState(() => _step1Error = message);
+      _scrollStep1ToBottom();
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -168,24 +185,54 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    // 유효성 검사
-    final emailErr = validateEmail(email);
-    final passwordErr = validatePassword(password);
+    // 모든 필수 항목 유효성 검사
+    bool hasError = false;
+
+    // 이메일 필수 + 형식
+    String? emailErr;
+    if (email.isEmpty) {
+      emailErr = '이메일을 입력해주세요';
+      hasError = true;
+    } else {
+      emailErr = validateEmail(email);
+      if (emailErr != null) hasError = true;
+    }
+
+    // 비밀번호 필수 + 형식
+    String? passwordErr;
+    if (password.isEmpty) {
+      passwordErr = '비밀번호를 입력해주세요';
+      hasError = true;
+    } else {
+      passwordErr = validatePassword(password);
+      if (passwordErr != null) hasError = true;
+    }
+
+    // 비밀번호 재확인 필수 + 일치
+    String? confirmErr;
+    if (confirmPassword.isEmpty) {
+      confirmErr = '비밀번호를 다시 입력해주세요';
+      hasError = true;
+    } else if (password != confirmPassword) {
+      confirmErr = '비밀번호가 일치하지 않습니다';
+      hasError = true;
+    }
+
+    // 관심 목표 필수
+    String? interestErr;
+    if (_selectedInterests.isEmpty) {
+      interestErr = '관심 목표를 최소 1개 선택해주세요';
+      hasError = true;
+    }
+
     setState(() {
       _emailError = emailErr;
       _passwordError = passwordErr;
+      _confirmPasswordError = confirmErr;
+      _interestError = interestErr;
     });
-    if (emailErr != null || passwordErr != null) return;
 
-    if (password != confirmPassword) {
-      setState(() => _confirmPasswordError = '비밀번호가 일치하지 않습니다');
-      return;
-    }
-
-    if (_selectedInterests.isEmpty) {
-      showToast('관심 목표를 최소 1개 선택해주세요');
-      return;
-    }
+    if (hasError) return;
 
     setState(() => _isLoading = true);
     try {
@@ -219,16 +266,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
           break;
         case 'EMAIL_ALREADY_EXISTS':
           message = '이미 사용 중인 이메일입니다';
+          setState(() => _emailError = message);
           break;
         default:
           message = e.message;
+          showToast(message);
       }
 
       if (goBackToStep1) {
         setState(() => _step1Error = message);
         _goToStep1();
-      } else {
-        showToast(message);
+        _scrollStep1ToBottom();
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -308,6 +356,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       children: [
         Expanded(
           child: SingleChildScrollView(
+            controller: _step1ScrollController,
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,6 +547,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                if (_interestError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      _interestError!,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
@@ -511,6 +568,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             _selectedInterests.remove(option);
                           } else {
                             _selectedInterests.add(option);
+                          }
+                          if (_selectedInterests.isNotEmpty) {
+                            _interestError = null;
                           }
                         });
                       },

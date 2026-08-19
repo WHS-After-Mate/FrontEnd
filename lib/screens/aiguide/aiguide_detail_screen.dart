@@ -250,9 +250,11 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                guide.basicCare.isNotEmpty
-                    ? guide.basicCare.first
-                    : '${guide.careName} ${guide.daysElapsed}일차 케어 안내입니다.',
+                guide.keyCare != null && guide.keyCare!.isNotEmpty && !guide.keyCare!.contains('확인해주세요')
+                    ? guide.keyCare!
+                    : guide.aftercare.isNotEmpty
+                        ? guide.aftercare.first
+                        : '${guide.careName} ${guide.daysElapsed}일차 케어 안내입니다.',
                 style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 16,
@@ -280,7 +282,7 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
         const SizedBox(height: 26),
 
         // 기본 사후관리 안내
-        if (guide.basicCare.isNotEmpty) ...[
+        if (guide.aftercare.isNotEmpty) ...[
           const Text(
             '기본 사후관리 안내',
             style: TextStyle(
@@ -290,7 +292,7 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          ...guide.basicCare.map((item) => Padding(
+          ...guide.aftercare.map((item) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: _buildGuideItem(item, isCheck: true),
           )),
@@ -298,7 +300,7 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
         ],
 
         // 주의 사항 목록
-        if (guide.mustAvoid.isNotEmpty) ...[
+        if (guide.precautions.isNotEmpty) ...[
           const Text(
             '주의 사항 목록',
             style: TextStyle(
@@ -308,7 +310,7 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          ...guide.mustAvoid.map((item) => Padding(
+          ...guide.precautions.map((item) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: _buildGuideItem(item, isCheck: false),
           )),

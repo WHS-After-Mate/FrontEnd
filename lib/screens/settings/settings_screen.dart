@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../services/auth/auth_service.dart';
@@ -14,8 +13,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _careNotification = false;
-  bool _marketingNotification = false;
+  bool _careNotification = true;
+  bool _marketingNotification = true;
   bool _notificationLoaded = false;
   bool _isLoggingOut = false;
 
@@ -31,25 +30,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadNotificationSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _careNotification = prefs.getBool('care_notification') ?? false;
-      _marketingNotification = prefs.getBool('marketing_notification') ?? false;
-      _notificationLoaded = true;
-    });
+    try {
+      final settings = await _profileService.getNotificationSettings();
+      if (!mounted) return;
+      setState(() {
+        _careNotification = settings.careNotification;
+        _marketingNotification = settings.marketingNotification;
+        _notificationLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('[SettingsScreen] 알림 설정 로드 실패: $e');
+      // 실패 시 기본값(true)으로 표시
+      if (!mounted) return;
+      setState(() => _notificationLoaded = true);
+    }
   }
 
   Future<void> _setCareNotification(bool value) async {
     setState(() => _careNotification = value);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('care_notification', value);
+    try {
+      await _profileService.updateNotificationSettings(
+        NotificationSettingsUpdate(careNotification: value),
+      );
+    } catch (e) {
+      debugPrint('[SettingsScreen] 사후관리 알림 변경 실패: $e');
+      // 실패 시 롤백
+      if (!mounted) return;
+      setState(() => _careNotification = !value);
+    }
   }
 
   Future<void> _setMarketingNotification(bool value) async {
     setState(() => _marketingNotification = value);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('marketing_notification', value);
+    try {
+      await _profileService.updateNotificationSettings(
+        NotificationSettingsUpdate(marketingNotification: value),
+      );
+    } catch (e) {
+      debugPrint('[SettingsScreen] 마케팅 알림 변경 실패: $e');
+      // 실패 시 롤백
+      if (!mounted) return;
+      setState(() => _marketingNotification = !value);
+    }
   }
 
   Future<void> _loadProfile() async {
