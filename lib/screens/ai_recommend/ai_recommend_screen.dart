@@ -228,7 +228,7 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
                 if (detail.clinicContacts.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text(
-                    '${detail.clinicContacts.first.label} · 권장 시점 2~3주 후',
+                    '· ${detail.clinicContacts.first.label} · 권장 시점 2~3주 후',
                     style: const TextStyle(color: Color(0xFFB8B8BC), fontSize: 13),
                   ),
                 ],

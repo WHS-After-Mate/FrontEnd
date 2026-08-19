@@ -3,12 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
-import '../../services/home/home_service.dart';
-import '../../services/home/home_models.dart';
-import '../../services/mycare/mycare_service.dart';
-import '../../services/mycare/mycare_models.dart';
-import '../../services/profile/profile_service.dart';
-import '../../services/profile/profile_models.dart';
+import '../../services/home/home_cache.dart';
 import '../main_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,57 +14,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _homeService = HomeService();
-  final _myCareService = MyCareService();
-  final _profileService = ProfileService();
-
-  HomeSummary? _summary;
-  List<MembershipItem> _memberships = [];
-  UserProfile? _profile;
-  bool _isLoading = true;
-  String? _error;
+  final _cache = HomeCache();
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _cache.addListener(_onCacheUpdate);
+    _cache.loadIfNeeded();
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final results = await Future.wait([
-        _homeService.getSummary(),
-        _myCareService.getMemberships(),
-        _profileService.getProfile(),
-        _myCareService.getCareRecords(size: 1),
-      ]);
-      if (!mounted) return;
-      final summary = results[0] as HomeSummary;
-      // 배포 서버가 latestCare.brand를 아직 안 내려줄 수 있으므로 care-records에서 보완
-      final recentRecords = results[3] as CareRecordList;
-      if (summary.latestCare != null &&
-          (summary.latestCare!.brand == null || summary.latestCare!.brand!.isEmpty) &&
-          recentRecords.items.isNotEmpty) {
-        summary.latestCare!.brand = recentRecords.items.first.brand;
-      }
-      setState(() {
-        _summary = summary;
-        _memberships = results[1] as List<MembershipItem>
-          ..sort((a, b) => (b.lastUsedAt ?? '').compareTo(a.lastUsedAt ?? ''));
-        _profile = results[2] as UserProfile;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = '데이터를 불러올 수 없습니다';
-        _isLoading = false;
-      });
-    }
+  @override
+  void dispose() {
+    _cache.removeListener(_onCacheUpdate);
+    super.dispose();
+  }
+
+  void _onCacheUpdate() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _handleRefresh() async {
+    await _cache.reload();
   }
 
   Color _getBrandColor(String? brand) {
@@ -92,19 +57,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_cache.isLoading && !_cache.hasData) {
       return const Center(child: CircularProgressIndicator(color: AppColors.whsBlack));
     }
 
-    if (_error != null) {
+    if (_cache.error != null && !_cache.hasData) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_error!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            Text(_cache.error!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: _loadData,
+              onTap: _handleRefresh,
               child: const Text('다시 시도', style: TextStyle(color: AppColors.whsBlack, fontWeight: FontWeight.bold)),
             ),
           ],
@@ -112,15 +77,16 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final summary = _summary!;
+    final summary = _cache.summary!;
     final latestCare = summary.latestCare;
     final aftercare = summary.aftercareCard;
     final recommendation = summary.recommendation;
-    final userName = _profile?.name ?? '';
+    final userName = _cache.profile?.name ?? '';
     final userInitial = userName.isNotEmpty ? userName[0] : '';
+    final memberships = _cache.memberships ?? [];
 
     return RefreshIndicator(
-      onRefresh: _loadData,
+      onRefresh: _handleRefresh,
       color: AppColors.whsBlack,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -389,14 +355,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
 
             // Voucher status (개별 이용권 리스트)
-            if (_memberships.isNotEmpty) ...[
+            if (memberships.isNotEmpty) ...[
               const SectionTitle(text: '이용권 현황'),
               WhiteCard(
                 child: Column(
                   children: [
-                    ..._memberships.asMap().entries.map((entry) {
+                    ...memberships.asMap().entries.map((entry) {
                       final item = entry.value;
-                      final isLast = entry.key == _memberships.length - 1;
+                      final isLast = entry.key == memberships.length - 1;
                       final color = _getBrandColor(item.brand);
                       final brandLabel = _getBrandLabel(item.brand);
                       final displayName = brandLabel.isNotEmpty

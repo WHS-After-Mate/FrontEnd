@@ -81,192 +81,184 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 로고
+                const SizedBox(height: 24),
+                const Text(
+                  'WHS',
+                  style: TextStyle(
+                    color: AppColors.whsBlack,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    height: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'After Mate',
+                  style: TextStyle(
+                    color: AppColors.whsBlack,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    height: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // 타이틀
+                const Text(
+                  '관리 이후도, 함께할게요',
+                  style: TextStyle(
+                    color: AppColors.whsBlack,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '최근 관리 이력과 오늘의 사후관리 안내를 확인해보세요',
+                  style: TextStyle(
+                    color: Color(0xFF8E8E8E),
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 22),
+
+                // 이메일
+                const Text(
+                  '이메일',
+                  style: TextStyle(
+                    color: Color(0xFF8E8E8E),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: (_emailError != null && _emailError!.isNotEmpty)
+                          ? Colors.red
+                          : AppColors.cardBorder,
+                    ),
+                  ),
+                  child: Center(
+                    child: TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      onChanged: _validateEmail,
+                      decoration: const InputDecoration(
+                        hintText: 'you@example.com',
+                        hintStyle: TextStyle(color: AppColors.hintColor, fontSize: 16),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      style: const TextStyle(color: AppColors.whsBlack, fontSize: 16),
+                    ),
+                  ),
+                ),
+                if (_emailError != null && _emailError!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, left: 4),
+                    child: Text(
+                      _emailError!,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+
+                // 비밀번호
+                const Text(
+                  '비밀번호',
+                  style: TextStyle(
+                    color: Color(0xFF8E8E8E),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: (_passwordError != null && _passwordError!.isNotEmpty)
+                          ? Colors.red
+                          : AppColors.cardBorder,
+                    ),
+                  ),
+                  child: Row(
                     children: [
-                      // 로고
-                      const SizedBox(height: 24),
-                      const Text(
-                        'WHS',
-                        style: TextStyle(
-                          color: AppColors.whsBlack,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          height: 1.0,
+                      Expanded(
+                        child: TextField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          onChanged: _validatePassword,
+                          decoration: const InputDecoration(
+                            hintText: '••••••••',
+                            hintStyle: TextStyle(color: AppColors.hintColor, fontSize: 16),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          style: const TextStyle(color: AppColors.whsBlack, fontSize: 16),
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'After Mate',
-                        style: TextStyle(
-                          color: AppColors.whsBlack,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          height: 1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // 타이틀
-                      const Text(
-                        '관리 이후도, 함께할게요',
-                        style: TextStyle(
-                          color: AppColors.whsBlack,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '최근 관리 이력과 오늘의 사후관리 안내를 확인해보세요',
-                        style: TextStyle(
-                          color: Color(0xFF8E8E8E),
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-
-                      // 이메일
-                      const Text(
-                        '이메일',
-                        style: TextStyle(
-                          color: Color(0xFF8E8E8E),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: (_emailError != null && _emailError!.isNotEmpty)
-                                ? Colors.red
-                                : AppColors.cardBorder,
+                      GestureDetector(
+                        onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: AppColors.textSecondary,
+                            size: 24,
                           ),
                         ),
-                        child: Center(
-                          child: TextField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            onChanged: _validateEmail,
-                            decoration: const InputDecoration(
-                              hintText: 'you@example.com',
-                              hintStyle: TextStyle(color: AppColors.hintColor, fontSize: 16),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                            ),
-                            style: const TextStyle(color: AppColors.whsBlack, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                      if (_emailError != null && _emailError!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6, left: 4),
-                          child: Text(
-                            _emailError!,
-                            style: const TextStyle(color: Colors.red, fontSize: 12),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-
-                      // 비밀번호
-                      const Text(
-                        '비밀번호',
-                        style: TextStyle(
-                          color: Color(0xFF8E8E8E),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: (_passwordError != null && _passwordError!.isNotEmpty)
-                                ? Colors.red
-                                : AppColors.cardBorder,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                onChanged: _validatePassword,
-                                decoration: const InputDecoration(
-                                  hintText: '••••••••',
-                                  hintStyle: TextStyle(color: AppColors.hintColor, fontSize: 16),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                                ),
-                                style: const TextStyle(color: AppColors.whsBlack, fontSize: 16),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => setState(() => _obscurePassword = !_obscurePassword),
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 16),
-                                child: Icon(
-                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                  color: AppColors.textSecondary,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (_passwordError != null && _passwordError!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6, left: 4),
-                          child: Text(
-                            _passwordError!,
-                            style: const TextStyle(color: Colors.red, fontSize: 12),
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-
-                      // 비밀번호 찾기
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, '/reset-password'),
-                          child: const Text(
-                            '비밀번호를 잊으셨나요?',
-                            style: TextStyle(
-                              color: Color(0xFF8E8E8E),
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      // 로그인 버튼
-                      BlackButton(
-                        text: _isLoading ? '로그인 중...' : '로그인',
-                        onPressed: _isLoading ? null : _handleLogin,
                       ),
                     ],
                   ),
                 ),
-              ),
+                if (_passwordError != null && _passwordError!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, left: 4),
+                    child: Text(
+                      _passwordError!,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
+                const SizedBox(height: 8),
 
-              // 회원가입 안내 (항상 하단에 고정)
-              Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 8),
-                child: Center(
+                // 비밀번호 찾기
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/reset-password'),
+                    child: const Text(
+                      '비밀번호를 잊으셨나요?',
+                      style: TextStyle(
+                        color: Color(0xFF8E8E8E),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // 로그인 버튼
+                BlackButton(
+                  text: _isLoading ? '로그인 중...' : '로그인',
+                  onPressed: _isLoading ? null : _handleLogin,
+                ),
+                const SizedBox(height: 24),
+
+                // 회원가입 안내
+                Center(
                   child: GestureDetector(
                     onTap: () => Navigator.pushNamed(context, '/sign-up'),
                     child: RichText(
@@ -286,8 +278,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

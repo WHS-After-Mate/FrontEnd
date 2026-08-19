@@ -7,6 +7,7 @@ import '../../services/auth/auth_models.dart';
 import '../../services/profile/profile_service.dart';
 import '../../services/profile/profile_models.dart';
 import '../../services/api/api_exception.dart';
+import '../../services/home/home_cache.dart';
 import '../../utils/toast.dart';
 import '../main_screen.dart';
 
@@ -168,6 +169,7 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
       }
 
       if (!mounted) return;
+      HomeCache().invalidate();
       Navigator.pop(context);
       showToast('저장되었습니다');
     } on ApiException catch (e) {
