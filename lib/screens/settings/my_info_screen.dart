@@ -46,6 +46,7 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
     '바디라인·체형 관리', '붓기 케어', '컨디션·대사 관리',
   ];
   final Set<String> _selectedInterests = {};
+  String? _interestError;
 
   @override
   void initState() {
@@ -100,6 +101,12 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
   }
 
   Future<void> _handleSave() async {
+    // 관심 목표 유효성 검사
+    if (_selectedInterests.isEmpty) {
+      setState(() => _interestError = '관심 목표를 최소 1개 이상 선택해주세요');
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     try {
@@ -301,6 +308,10 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
                               } else {
                                 _selectedInterests.add(option);
                               }
+                              // 선택 변경 시 에러 클리어
+                              if (_selectedInterests.isNotEmpty) {
+                                _interestError = null;
+                              }
                             });
                           },
                           child: Container(
@@ -323,6 +334,14 @@ class _MyInfoScreenState extends State<MyInfoScreen> {
                         );
                       }).toList(),
                     ),
+                    if (_interestError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          _interestError!,
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
 
                     // 비밀번호 변경
                     const SectionTitle(text: '비밀번호 변경'),

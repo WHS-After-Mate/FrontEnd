@@ -394,7 +394,7 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
               padding: EdgeInsets.symmetric(vertical: 40),
               child: Center(
                 child: Text(
-                  '사후관리 가이드를 준비 중이에요.\n잠시 후 다시 시도해주세요.',
+                  '사후관리 가이드 정보가 없습니다.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                 ),

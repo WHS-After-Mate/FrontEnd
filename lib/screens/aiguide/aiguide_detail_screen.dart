@@ -4,6 +4,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../services/aftercare/aftercare_service.dart';
 import '../../services/aftercare/aftercare_models.dart';
+import '../../services/api/api_exception.dart';
 
 class AiGuideDetailScreen extends StatefulWidget {
   final String careName;
@@ -69,6 +70,14 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
       if (!mounted) return;
       setState(() {
         _guide = guide;
+        _isLoading = false;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = (e.statusCode == 404 || e.code == 'GUIDE_NOT_AVAILABLE')
+            ? '해당 일차의 가이드가 아직 준비되지 않았어요'
+            : '가이드를 불러올 수 없습니다';
         _isLoading = false;
       });
     } catch (e) {
@@ -270,9 +279,9 @@ class _AiGuideDetailScreenState extends State<AiGuideDetailScreen> {
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    guide.generatedBy == 'llm' ? 'AI 개인화 가이드' : '기본 가이드',
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  child: const Text(
+                    '시술별 맞춤 가이드',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
                   ),
                 ),
               ],
