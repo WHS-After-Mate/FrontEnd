@@ -105,21 +105,30 @@ class _AiChatScreenState extends State<AiChatScreen> {
           }
         }).toList();
 
-        final baseCare = completedCares.isNotEmpty ? completedCares.first : _recentCares.first;
-        _selectedCare = baseCare;
-        final daysElapsed = today.difference(DateTime.parse(baseCare.careDate)).inDays;
+        if (completedCares.isNotEmpty) {
+          final baseCare = completedCares.first;
+          _selectedCare = baseCare;
+          final daysElapsed = today.difference(DateTime.parse(baseCare.careDate)).inDays;
 
-        _messages.add(ChatMessage(
-          type: MessageType.text,
-          text: '안녕하세요${_userName.isNotEmpty ? ', $_userName님' : ''}.\n최근에 받은 ${baseCare.careName}은 현재 관리 후 $daysElapsed일차예요.\n사후관리와 관련해 어떤 점이 궁금하신가요?',
-          isUser: false,
-        ));
+          _messages.add(ChatMessage(
+            type: MessageType.text,
+            text: '안녕하세요${_userName.isNotEmpty ? ', $_userName님' : ''}.\n최근에 받은 ${baseCare.careName}은 현재 관리 후 $daysElapsed일차예요.\n사후관리와 관련해 어떤 점이 궁금하신가요?',
+            isUser: false,
+          ));
 
-        _messages.add(ChatMessage(
-          type: MessageType.suggestions,
-          isUser: false,
-          suggestions: _getSuggestedQuestions(daysElapsed),
-        ));
+          _messages.add(ChatMessage(
+            type: MessageType.suggestions,
+            isUser: false,
+            suggestions: _getSuggestedQuestions(daysElapsed),
+          ));
+        } else {
+          // 예약만 있고 완료된 관리가 없는 경우
+          _messages.add(ChatMessage(
+            type: MessageType.text,
+            text: '안녕하세요${_userName.isNotEmpty ? ', $_userName님' : ''}.\n아직 완료된 관리가 없어요.\n관리를 받으신 후 사후관리 안내를 도와드릴게요!',
+            isUser: false,
+          ));
+        }
       } else {
         _messages.add(const ChatMessage(
           type: MessageType.text,
@@ -309,6 +318,21 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
+
+    // 완료된 관리가 없으면 질문 전송 차단
+    if (_selectedCare == null) {
+      setState(() {
+        _messages.add(ChatMessage(type: MessageType.text, text: text, isUser: true));
+        _messages.add(const ChatMessage(
+          type: MessageType.text,
+          text: '완료된 관리 이력이 있어야 사후관리 질문에 답변드릴 수 있어요.\n관리를 받으신 후 다시 이용해주세요!',
+          isUser: false,
+        ));
+      });
+      _controller.clear();
+      _scrollToBottom();
+      return;
+    }
 
     setState(() {
       _messages.add(ChatMessage(type: MessageType.text, text: text, isUser: true));

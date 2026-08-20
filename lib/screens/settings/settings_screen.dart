@@ -3,6 +3,8 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/fcm/fcm_service.dart';
+import '../../services/home/home_cache.dart';
+import '../../services/home/recommend_cache.dart';
 import '../../services/profile/profile_service.dart';
 import '../../services/profile/profile_models.dart';
 
@@ -89,6 +91,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isLoggingOut = true);
     await FcmService().unregisterToken();
     await _authService.logout();
+    HomeCache().invalidate();
+    RecommendCache().invalidate();
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
   }

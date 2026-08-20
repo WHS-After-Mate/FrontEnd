@@ -52,7 +52,8 @@ class _MyCareScreenState extends State<MyCareScreen> {
     '윔': AppColors.wim,
   };
 
-  List<CareRecordItem> _historyItems = [];
+  List<CareRecordItem> _allHistoryItems = []; // 전체 데이터 캐시
+  List<CareRecordItem> _historyItems = [];    // 필터링된 데이터 (UI 표시용)
   bool _historyLoading = false;
   String? _historyError;
 
@@ -172,28 +173,51 @@ class _MyCareScreenState extends State<MyCareScreen> {
     }
   }
 
-  Future<void> _loadHistory() async {
-    setState(() {
-      _historyLoading = true;
-      _historyError = null;
-    });
-    try {
-      final brand = _historyFilter == '전체' ? null : _filterToBrand(_historyFilter);
-      final result = await _service.getCareRecords(brand: brand);
-      if (mounted) {
-        setState(() {
-          _historyItems = result.items;
-          _historyLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _historyError = '이력을 불러올 수 없습니다';
-          _historyLoading = false;
-        });
+  Future<void> _loadHistory({bool forceRefresh = false}) async {
+    // 캐시가 비어있거나 강제 새로고침이면 서버에서 전체 데이터 로드
+    if (_allHistoryItems.isEmpty || forceRefresh) {
+      setState(() {
+        _historyLoading = true;
+        _historyError = null;
+      });
+      try {
+        final result = await _service.getCareRecords(size: 100);
+        if (mounted) {
+          setState(() {
+            _allHistoryItems = result.items;
+            _historyLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _historyError = '이력을 불러올 수 없습니다';
+            _historyLoading = false;
+          });
+        }
+        return;
       }
     }
+    // 클라이언트 사이드 필터링 적용
+    _applyHistoryFilter();
+  }
+
+  void _applyHistoryFilter() {
+    if (!mounted) return;
+    setState(() {
+      if (_historyFilter == '전체') {
+        _historyItems = List.from(_allHistoryItems);
+      } else {
+        final targetBrand = _filterToBrand(_historyFilter);
+        _historyItems = _allHistoryItems.where((item) {
+          if (item.brand == null) return false;
+          // 서버에서 보내는 brand 값과 매칭 (대소문자 무시)
+          final itemBrand = item.brand!.toUpperCase();
+          final filterBrand = targetBrand?.toUpperCase() ?? '';
+          return itemBrand.contains(filterBrand.split(' ').first);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _loadMemberships() async {
@@ -222,8 +246,10 @@ class _MyCareScreenState extends State<MyCareScreen> {
 
   void _onTabChanged(int tab) {
     setState(() => _selectedTab = tab);
-    if (tab == 1 && _historyItems.isEmpty && !_historyLoading) {
+    if (tab == 1 && _allHistoryItems.isEmpty && !_historyLoading) {
       _loadHistory();
+    } else if (tab == 1 && _allHistoryItems.isNotEmpty) {
+      _applyHistoryFilter();
     } else if (tab == 2 && _memberships.isEmpty && !_membershipsLoading) {
       _loadMemberships();
     }
@@ -717,7 +743,7 @@ class _MyCareScreenState extends State<MyCareScreen> {
                 child: GestureDetector(
                   onTap: () {
                     setState(() => _historyFilter = filter);
-                    _loadHistory();
+                    _applyHistoryFilter();
                   },
                   child: Container(
                     padding:

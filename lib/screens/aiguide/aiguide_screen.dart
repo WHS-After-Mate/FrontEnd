@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../services/mycare/mycare_service.dart';
+import '../../services/mycare/mycare_models.dart';
 import '../../services/aftercare/aftercare_service.dart';
 import '../../services/aftercare/aftercare_models.dart';
 import '../../services/api/api_exception.dart';
@@ -48,13 +49,14 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
       final result = await _myCareService.getCareRecords(size: 10);
       if (!mounted) return;
       if (result.items.isNotEmpty) {
-        // initialCareRecordId가 지정되었으면 해당 관리를 찾고, 없으면 최근 관리 사용
+        // initialCareRecordId가 지정되었으면 해당 관리를 찾고,
+        // 없으면 우선순위(오늘 받은 시술 > 과거 가장 최근 시술 > 가장 가까운 예약 시술)에 따라 선택
         final item = widget.initialCareRecordId != null
             ? result.items.firstWhere(
                 (i) => i.careRecordId == widget.initialCareRecordId,
-                orElse: () => result.items.first,
+                orElse: () => _pickPriorityCare(result.items),
               )
-            : result.items.first;
+            : _pickPriorityCare(result.items);
         setState(() {
           _lastCareDate = DateTime.parse(item.careDate);
           _careRecordId = item.careRecordId;
@@ -77,6 +79,51 @@ class _AiGuideScreenState extends State<AiGuideScreen> {
         });
       }
     }
+  }
+
+  /// 우선순위: 오늘 받은 시술 > 과거 가장 최근에 받은 시술 > 가장 가까운 예약 시술
+  CareRecordItem _pickPriorityCare(List<CareRecordItem> items) {
+    final now = DateTime.now();
+    final todayDate = DateTime(now.year, now.month, now.day);
+
+    DateTime? parseDate(String careDate) {
+      try {
+        final d = DateTime.parse(careDate);
+        return DateTime(d.year, d.month, d.day);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final todayItems = <CareRecordItem>[];
+    final pastItems = <CareRecordItem>[];
+    final futureItems = <CareRecordItem>[];
+
+    for (final item in items) {
+      final date = parseDate(item.careDate);
+      if (date == null) continue;
+      if (date.isAtSameMomentAs(todayDate)) {
+        todayItems.add(item);
+      } else if (date.isBefore(todayDate)) {
+        pastItems.add(item);
+      } else {
+        futureItems.add(item);
+      }
+    }
+
+    if (todayItems.isNotEmpty) return todayItems.first;
+
+    if (pastItems.isNotEmpty) {
+      pastItems.sort((a, b) => b.careDate.compareTo(a.careDate));
+      return pastItems.first;
+    }
+
+    if (futureItems.isNotEmpty) {
+      futureItems.sort((a, b) => a.careDate.compareTo(b.careDate));
+      return futureItems.first;
+    }
+
+    return items.first;
   }
 
   Future<void> _loadGuide() async {

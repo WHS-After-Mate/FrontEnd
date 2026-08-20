@@ -223,6 +223,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
+              )
+            else
+              _AnimatedGradientCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      '오늘의 사후관리',
+                      style: TextStyle(color: Color(0xFFB8B8BC), fontSize: 13),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      '관리를 받으시면\n맞춤 사후관리를 안내해드릴게요',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      '시술 후 회복을 도와드립니다',
+                      style: TextStyle(color: Color(0xFFB8B8BC), fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
             const SizedBox(height: 14),
 
@@ -299,7 +325,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 스파클 아이콘
                       Container(
                         width: 40,
                         height: 40,
@@ -316,7 +341,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      // 텍스트
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,6 +374,65 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+            ] else ...[
+              const SectionTitle(text: '다음 관리 추천'),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFF3F0FF),
+                      Color(0xFFFFFFFF),
+                    ],
+                  ),
+                  border: Border.all(color: const Color(0xFFE8E0F8), width: 1),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEDE7FF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/svg/ic_sparkle.svg',
+                          width: 22,
+                          height: 22,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '맞춤 추천 준비 중',
+                            style: TextStyle(
+                              color: AppColors.whsBlack,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            '관리를 받으시면 맞춤 추천을 드릴게요',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
